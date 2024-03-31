@@ -1,4 +1,25 @@
-.login {
-    text-align: center;
-    // Add more styles specific to Page1 here
+.layout {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 50px; // Adjust the padding as needed
+    .ant-menu {
+      line-height: 64px; // Align menu items vertically
+    }
   }
+}
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 64px); // Subtract header height
+
+  .login-card {
+    width: 300px;
+    text-align: center;
+    // Additional styles...
+  }
+  // Additional styles...
+}
