@@ -24,7 +24,7 @@ const defaultAuthContextValue: AuthContextType = {
 const AuthContext = createContext<AuthContextType>(defaultAuthContextValue);
 
 export const useAuth = () => useContext(AuthContext);
-const userID = (): string => auth.currentUser?.uid ?? '__unknown__';
+const userID = (): string => auth.currentUser?.uid ?? '__unknown';
 export const uid = userID();
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
