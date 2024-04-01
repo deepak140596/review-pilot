@@ -3,20 +3,39 @@ import { Button, Card, Layout, Menu } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
 import { Content, Header } from 'antd/es/layout/layout';
 import AppLogo from '../../components/logo/logo';
-import { useEffect } from 'react';
+import { GithubAuthProvider, signInWithPopup, getAuth } from 'firebase/auth';
+import { setGithubToken } from '../../api/services/firestore/firestore-setter';
+import { FirestoreService } from '../../api/services/firestore/firestore-service';
 
 const Login = () => {
 
-  useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get('code');
-    console.log(`code: ${code}`);
-  });
-
   const handleGitHubLogin = () => {
-    const clientId = "";
-    console.log(`clientId: ${clientId}`);
-    const githubLoginLink = `https://github.com/login/oauth/authorize?scope=user:email&client_id=${clientId}`;
-    window.location.href = githubLoginLink;
+    const provider = new GithubAuthProvider();
+    provider.addScope('repo');
+    provider.setCustomParameters({
+      allow_signup: 'false'
+    });
+    const auth = getAuth();
+
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const credential = GithubAuthProvider.credentialFromResult(result);
+        const token = credential?.accessToken;
+        const user = result.user;
+
+        FirestoreService.uid = user.uid;
+        setGithubToken(token);
+
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.customData.email;
+        const credential = GithubAuthProvider.credentialFromError(error);
+        
+      });
+
   };
 
   return (
