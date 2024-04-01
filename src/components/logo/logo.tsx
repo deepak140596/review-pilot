@@ -1,4 +1,4 @@
-import imagePaths from "../../library/images";
+import imagePaths from "../library/images";
 import './logo.scss';
 
 const AppLogo = () => {

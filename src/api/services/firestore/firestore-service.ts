@@ -2,6 +2,7 @@ import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc,
 import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
+import { getAuth } from 'firebase/auth';
 
 
 const firebaseConfig = {
@@ -17,6 +18,7 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const analytics = getAnalytics(firebaseApp);
+export const auth = getAuth(firebaseApp);
 const firestoreDB = getFirestore(firebaseApp);
 
 function docToData<T>(doc: QueryDocumentSnapshot<DocumentData>): T {
@@ -46,8 +48,6 @@ function convertTimestamps(obj: any): any {
 }
 
   export class FirestoreService {
-    static uid = "__undefined__";
-    
     static async getDocument<T>(collectionPath: string, docId: string): Promise<T> {
      try {
         const docRef = doc(firestoreDB, collectionPath, docId);

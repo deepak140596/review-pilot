@@ -3,40 +3,28 @@ import { Button, Card, Layout, Menu } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
 import { Content, Header } from 'antd/es/layout/layout';
 import AppLogo from '../../components/logo/logo';
-import { GithubAuthProvider, signInWithPopup, getAuth } from 'firebase/auth';
-import { setGithubToken } from '../../api/services/firestore/firestore-setter';
-import { FirestoreService } from '../../api/services/firestore/firestore-service';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/auth-context';
+import { useEffect } from 'react';
 
 const Login = () => {
 
-  const handleGitHubLogin = () => {
-    const provider = new GithubAuthProvider();
-    provider.addScope('repo');
-    provider.setCustomParameters({
-      allow_signup: 'false'
+  const navigate = useNavigate();
+  const { loginWithGitHub, currentUser } = useAuth();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard', { replace: true });
+    }
+  })
+
+  const handleLogin = () => {
+    loginWithGitHub().then(() => {
+      navigate('/dashboard');
+    }).catch(error => {
+      console.error('Login failed:', error);
     });
-    const auth = getAuth();
-
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        const credential = GithubAuthProvider.credentialFromResult(result);
-        const token = credential?.accessToken;
-        const user = result.user;
-
-        FirestoreService.uid = user.uid;
-        setGithubToken(token);
-
-      }).catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.customData.email;
-        const credential = GithubAuthProvider.credentialFromError(error);
-        
-      });
-
-  };
+  }
 
   return (
     <Layout className="layout">
@@ -56,7 +44,7 @@ const Login = () => {
           <Button
             type="primary"
             icon={<GithubOutlined />}
-            onClick={handleGitHubLogin}
+            onClick={handleLogin}
             className="login-button"
           >
             Login with GitHub
