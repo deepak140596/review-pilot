@@ -1,4 +1,26 @@
-.dashboard {
-    text-align: center;
-    // Add more styles specific to Page1 here
+.dashboard-layout {
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+  .ant-menu {
+    line-height: 64px;
   }
+}
+
+.dashboard-sidebar {
+  background: #fff;
+
+  &__menu {
+    height: 100%;
+    border-right: 0;
+  }
+}
+
+.dashboard-content {
+  padding: 0 24px 24px;
+}
