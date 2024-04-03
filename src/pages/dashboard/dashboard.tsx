@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import AppLogo from '../../components/logo/logo';
 import { useAuth } from '../../context/auth-context';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Overview from './overview/overview';
 import Repositories from './repositories/repositories';
 
@@ -26,6 +26,8 @@ const Dashboard = () => {
     console.log('component', component);
     setActiveComponent(component);
   };
+
+  
 
   return (
     <Layout className="dashboard-layout">
