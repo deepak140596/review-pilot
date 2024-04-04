@@ -27,7 +27,7 @@ const Dashboard = () => {
     setActiveComponent(component);
   };
 
-  
+  // this line 2 has been changed for PR
 
   return (
     <Layout className="dashboard-layout">
