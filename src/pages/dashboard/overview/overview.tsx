@@ -7,13 +7,13 @@ const Overview = () => {
     const handleInstalation = () => {
         const installationUrl = 'https://github.com/apps/reviewpilot-ai/installations/new';
         //replace current window
-        window.location.replace(installation
+        window.location.replace(installationUrl);
     };
 
     return (
         <Layout> 
             <Button type="primary" onClick={handleInstalation}>
-                Instll the app
+                Install the app
             </Button>
         </Layout>
     );
