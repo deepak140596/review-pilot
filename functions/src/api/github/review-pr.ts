@@ -4,6 +4,7 @@ import * as express from 'express';
 import * as functions from 'firebase-functions';
 import { createAppAuth } from "@octokit/auth-app";
 import { LLM_Model, prReviewLLMResponse } from "../ai/prompts/review-prompt";
+import axios from "axios";
 
 try {
     admin.initializeApp();
@@ -14,18 +15,16 @@ const app = express();
 
 app.post('/', async (req, res) => {
     const installationId = req.body.installation.id as number;
-    const octokit = await getAuthenticatedOctokit(installationId);
+    const {octokit, token} = await getAuthenticatedOctokit(installationId);
 
     const prNumber = req.body.number as number;
     const repoName = req.body.repository.name as string;
     const owner = req.body.repository.owner.login as string;
+    const pullUrl = req.body.pull_request.url as string;
 
-    const diffUrl = req.body.pull_request.diff_url as string;
-    const diff = await getDiff(diffUrl);
-
-    console.log(`pr number: ${prNumber}, repo: ${repoName}, owner: ${owner}, diffUrl: ${diffUrl}`)
-
-    const llmResponse = await prReviewLLMResponse(LLM_Model.GEMINI, diff);
+    const diffText = await getDiff(pullUrl, token);
+    const llmResponse = await prReviewLLMResponse(LLM_Model.GEMINI, diffText);
+    console.log(llmResponse);
 
     await octokit.rest.pulls.createReview({
         owner: owner,
@@ -41,10 +40,21 @@ app.post('/', async (req, res) => {
 
 export const reviewPr = functions.https.onRequest(app);
 
-async function getAuthenticatedOctokit(installationId: number): Promise<Octokit> {
+async function getAuthenticatedOctokit(installationId: number): Promise<{octokit: Octokit, token: string}> {
     const githubData = (await db.doc('admin/github').get()).data() ?? {};
     const privateKey = fixPrivateKeyFormat(githubData.private_key as string);
     const appId = githubData.app_id as number;
+
+    const authStrategy = createAppAuth({
+        appId: appId,
+        privateKey: privateKey,
+        installationId: installationId,
+        clientId: githubData.client_id as string,
+        clientSecret: githubData.client_secret as string,
+    });
+
+    const authentication = await authStrategy({type: "installation"});
+
     const octokit = new Octokit({
         authStrategy: createAppAuth,
         auth: {
@@ -54,7 +64,7 @@ async function getAuthenticatedOctokit(installationId: number): Promise<Octokit>
         }
     });
     await octokit.rest.apps.getAuthenticated();
-    return octokit;
+    return {octokit, token: authentication.token};
 }
 
 function fixPrivateKeyFormat(privateKeyData: string) {
@@ -69,7 +79,12 @@ function fixPrivateKeyFormat(privateKeyData: string) {
   	return fixedPrivateKey;
 }
 
-async function getDiff(diffUrl: string): Promise<string> {
-    const response = await fetch(diffUrl);
-    return await response.text();
+async function getDiff(pullUrl: string, token: string): Promise<string> {
+    const response = await axios.get(pullUrl, {
+        headers: {
+            Authorization: `token ${token}`,
+            Accept: "application/vnd.github.v3.diff"
+        }
+    });
+    return response.data;
 }
