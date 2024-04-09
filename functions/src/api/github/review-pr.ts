@@ -13,6 +13,20 @@ const app = express();
 
 app.get('/', async (req, res) => {
     const installationId = 49230850;
+    const octokit = await getAuthenticatedOctokit(installationId);
+
+    await octokit.rest.issues.create({
+        owner: "deepak140596",
+        repo: "review-pilot",
+        title: "Hello world from octokit",
+      });
+
+    res.status(200).send('PR review called');
+});
+
+export const reviewPr = functions.https.onRequest(app);
+
+async function getAuthenticatedOctokit(installationId: number): Promise<Octokit> {
     const githubData = (await db.doc('admin/github').get()).data() ?? {};
     const privateKey = fixPrivateKeyFormat(githubData.private_key as string);
     const appId = githubData.app_id as number;
@@ -24,20 +38,13 @@ app.get('/', async (req, res) => {
             appId: appId,
         }
     });
+
     const {
         data: { slug },
       } = await octokit.rest.apps.getAuthenticated();
 
-    await octokit.rest.issues.create({
-        owner: "deepak140596",
-        repo: "review-pilot",
-        title: "Hello world from " + slug,
-      });
-
-    res.status(200).send('PR review called');
-});
-
-export const reviewPr = functions.https.onRequest(app);
+    return octokit;
+}
 
 function fixPrivateKeyFormat(privateKeyData: string) {
 
