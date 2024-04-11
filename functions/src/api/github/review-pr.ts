@@ -1,7 +1,6 @@
 import { Octokit } from "octokit";
 import * as admin from "firebase-admin";
 import * as express from 'express';
-import * as functions from 'firebase-functions';
 import { createAppAuth } from "@octokit/auth-app";
 import { prReviewLLMResponse } from "../ai/prompts/review-prompt";
 import axios from "axios";
@@ -10,10 +9,8 @@ try {
     admin.initializeApp();
 } catch{}
 const db = admin.firestore();
-const app = express();
 
-
-app.post('/', async (req, res) => {
+export async function reviewPR(req: express.Request) {
     const installationId = req.body.installation.id as number;
     const {octokit, token} = await getAuthenticatedOctokit(installationId);
 
@@ -41,11 +38,8 @@ app.post('/', async (req, res) => {
     });
 
     console.log('pull review created')
-
-    res.status(200).send(review.data);
-});
-
-export const reviewPr = functions.https.onRequest(app);
+    return review;
+}
 
 async function getAuthenticatedOctokit(installationId: number): Promise<{octokit: Octokit, token: string}> {
     const githubData = (await db.doc('admin/github').get()).data() ?? {};
