@@ -3,7 +3,7 @@ import * as admin from "firebase-admin";
 import * as express from 'express';
 import * as functions from 'firebase-functions';
 import { createAppAuth } from "@octokit/auth-app";
-import { LLM_Model, prReviewLLMResponse } from "../ai/prompts/review-prompt";
+import { prReviewLLMResponse } from "../ai/prompts/review-prompt";
 import axios from "axios";
 
 try {
@@ -22,9 +22,11 @@ app.post('/', async (req, res) => {
     const owner = req.body.repository.owner.login as string;
     const pullUrl = req.body.pull_request.url as string;
 
+    await deletePendingReview(owner, repoName, prNumber, octokit);
+
     const diffText = await getDiff(pullUrl, token);
-    const llmResponse = await prReviewLLMResponse(LLM_Model.GEMINI, diffText);
-    console.log(llmResponse);
+    const llmResponse = await getLLMReponse(diffText);
+    console.log(`LLM Response : ${llmResponse}`);
 
     await octokit.rest.pulls.createReview({
         owner: owner,
@@ -87,4 +89,40 @@ async function getDiff(pullUrl: string, token: string): Promise<string> {
         }
     });
     return response.data;
+}
+
+async function deletePendingReview(owner: string, repo: string, pull_number: number, octokit: Octokit) {
+    const pendingReview = await findPendingReview(owner, repo, pull_number, octokit);
+    const reviewId = pendingReview?.id as number;
+    console.log(`pending review id: ${reviewId}`);
+
+    if (reviewId) {
+        await octokit.rest.pulls.deletePendingReview({
+            owner: owner,
+            repo: repo,
+            pull_number: pull_number,
+            review_id: reviewId,
+        });
+    } else {
+        return;
+    }
+}
+
+async function findPendingReview(owner: string, repo: string, pull_number: number, octokit: Octokit) {
+    const { data: reviews } = await octokit.rest.pulls.listReviews({
+      owner,
+      repo,
+      pull_number,
+    });
+    const pendingReview = reviews.find(review => review.state === "PENDING");
+    return pendingReview;
+  }
+
+async function getLLMReponse(diffText: string) {
+    const llmConfig = (await db.doc('admin/llm').get()).data() ?? {};
+    const model = llmConfig.model;
+    const version = llmConfig.version;
+    console.log(`model: ${model}  version: ${version}`)
+    const llmResponse = prReviewLLMResponse(model, version, diffText)
+    return llmResponse
 }

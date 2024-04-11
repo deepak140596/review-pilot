@@ -4,12 +4,11 @@ const {
     HarmBlockThreshold,
 } = require("@google/generative-ai");
 
-const MODEL_NAME = "gemini-1.0-pro";
 const API_KEY = "AIzaSyB8zMKZrpUUFSlbCZMkHTBNxNGySFZ-vx4";
 
-export async function callGemini(inputText: string) {
+export async function callGemini(version: string, inputText: string) {
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+    const model = genAI.getGenerativeModel({ model: version });
 
     const generationConfig = {
         temperature: 0,
