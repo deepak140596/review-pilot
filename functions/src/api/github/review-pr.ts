@@ -26,9 +26,12 @@ app.post('/', async (req, res) => {
 
     const diffText = await getDiff(pullUrl, token);
     const llmResponse = await getLLMReponse(diffText);
-    console.log(`LLM Response : ${llmResponse}`);
+    const body = llmResponse.body;
+    const event = llmResponse.event;
+    const comments = llmResponse.comments;
+    console.log(`LLM Response Body: ${body} event: ${event} comments: ${JSON.stringify(comments)}`);
 
-    await octokit.rest.pulls.createReview({
+    const review = await octokit.rest.pulls.createReview({
         owner: owner,
         repo: repoName,
         pull_number: prNumber,
@@ -37,7 +40,9 @@ app.post('/', async (req, res) => {
         comments: llmResponse.comments
     });
 
-    res.status(200).send('PR review called');
+    console.log('pull review created')
+
+    res.status(200).send(review.data);
 });
 
 export const reviewPr = functions.https.onRequest(app);
@@ -123,6 +128,7 @@ async function getLLMReponse(diffText: string) {
     const model = llmConfig.model;
     const version = llmConfig.version;
     console.log(`model: ${model}  version: ${version}`)
-    const llmResponse = prReviewLLMResponse(model, version, diffText)
-    return llmResponse
+    const llmResponse = await prReviewLLMResponse(model, version, diffText)
+    const convertedJSON = JSON.parse(llmResponse);
+    return convertedJSON
 }
