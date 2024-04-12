@@ -33,7 +33,15 @@ by reviewing the diff of the pull request.
 Keep these things in mind:
 1. Your answer should be always in JSON. it should follow the format of Github API.
 2. Write good comments, suggest how to improve code
-3. Don't blabber. Write only that is required.
+3. Ignore media files, binary files, etc. Only review code files.
+4. Output should follow Github review API format
+5. For comments - use the format: {
+    "path": "path/to/file",
+    "line": line number,
+    "side": "LEFT",
+    "body": "Review comment here"
+}
+5. Don't blabber. Write only that is required.
             `;
         case "claude":
             return `

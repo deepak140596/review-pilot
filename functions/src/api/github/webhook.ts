@@ -1,7 +1,8 @@
-// /functions/src/api/github/webhook.ts
 import * as functions from 'firebase-functions';
 import * as express from 'express';
 import { reviewPR } from './review-pr';
+import { handleCommands } from './handle-commands';
+import { getAuthenticatedOctokit } from './octokit';
 
 const app = express();
 
@@ -10,13 +11,15 @@ app.post('/', async (req, res) => {
   const payload = req.body;
   var response;
 
-  console.log(`Received GitHub event: ${eventType}`);
+  const { octokit, token } = await getAuthenticatedOctokit(req);
 
   if (eventType === 'pull_request') {
     const action = payload.action;
-    if (action == "opened" || action == "reopened" || action == "synchronize") {
-      response = await reviewPR(req);
+    if (action == "opened" || action == "reopened") {
+      response = await reviewPR(req, octokit, token);
     }
+  } else if (eventType === 'issue_comment') {
+    response = await handleCommands(req, octokit, token);
   }
 
   if (!response) {
@@ -25,4 +28,8 @@ app.post('/', async (req, res) => {
   res.status(200).send(response);
 });
 
-export const webhook = functions.https.onRequest(app);
+const runtimeOptions = {
+  timeoutSeconds: 400,
+  memory: '1GB' as const
+}
+export const webhook = functions.runWith(runtimeOptions).https.onRequest(app);

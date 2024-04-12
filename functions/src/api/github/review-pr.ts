@@ -1,7 +1,6 @@
 import { Octokit } from "octokit";
 import * as admin from "firebase-admin";
 import * as express from 'express';
-import { createAppAuth } from "@octokit/auth-app";
 import { prReviewLLMResponse } from "../ai/prompts/review-prompt";
 import axios from "axios";
 
@@ -10,75 +9,34 @@ try {
 } catch{}
 const db = admin.firestore();
 
-export async function reviewPR(req: express.Request) {
-    const installationId = req.body.installation.id as number;
-    const {octokit, token} = await getAuthenticatedOctokit(installationId);
-
-    const prNumber = req.body.number as number;
+export async function reviewPR(req: express.Request, octokit: Octokit, token: string) {
+    const prNumber = req.body.pull_request.number as number;
     const repoName = req.body.repository.name as string;
     const owner = req.body.repository.owner.login as string;
     const pullUrl = req.body.pull_request.url as string;
 
-    await deletePendingReview(owner, repoName, prNumber, octokit);
+    console.log(`owner: ${owner} repo: ${repoName} prNumber: ${prNumber}`);
 
+    await deletePendingReview(owner, repoName, prNumber, octokit);
     const diffText = await getDiff(pullUrl, token);
-    const llmResponse = await getLLMReponse(diffText);
+    const filteredDiff = filterDiff(diffText);
+    const llmResponse = await getLLMReponse(filteredDiff);
     const body = llmResponse.body;
-    const event = llmResponse.event;
     const comments = llmResponse.comments;
-    console.log(`LLM Response Body: ${body} event: ${event} comments: ${JSON.stringify(comments)}`);
+    console.log(`LLM Response Body: ${body} comments: ${JSON.stringify(comments)}`);
 
     const review = await octokit.rest.pulls.createReview({
         owner: owner,
         repo: repoName,
         pull_number: prNumber,
         body: llmResponse.body,
-        event: llmResponse.event,
+        event: 'COMMENT',
         comments: llmResponse.comments
     });
 
-    console.log('pull review created')
     return review;
 }
 
-async function getAuthenticatedOctokit(installationId: number): Promise<{octokit: Octokit, token: string}> {
-    const githubData = (await db.doc('admin/github').get()).data() ?? {};
-    const privateKey = fixPrivateKeyFormat(githubData.private_key as string);
-    const appId = githubData.app_id as number;
-
-    const authStrategy = createAppAuth({
-        appId: appId,
-        privateKey: privateKey,
-        installationId: installationId,
-        clientId: githubData.client_id as string,
-        clientSecret: githubData.client_secret as string,
-    });
-
-    const authentication = await authStrategy({type: "installation"});
-
-    const octokit = new Octokit({
-        authStrategy: createAppAuth,
-        auth: {
-            installationId: installationId,
-            privateKey: privateKey,
-            appId: appId,
-        }
-    });
-    await octokit.rest.apps.getAuthenticated();
-    return {octokit, token: authentication.token};
-}
-
-function fixPrivateKeyFormat(privateKeyData: string) {
-
-	const keyWithouBeginStatement = privateKeyData.replace("-----BEGIN RSA PRIVATE KEY----- ", "");
-	const keyWithouEndStatement = keyWithouBeginStatement.replace(" -----END RSA PRIVATE KEY-----", "");
-  	const lines = keyWithouEndStatement.split(' ');
-  	const formattedPrivateKey = lines.join('\n');
-
-  	const fixedPrivateKey = `-----BEGIN RSA PRIVATE KEY-----\n${formattedPrivateKey}\n-----END RSA PRIVATE KEY-----`;
-
-  	return fixedPrivateKey;
-}
 
 async function getDiff(pullUrl: string, token: string): Promise<string> {
     const response = await axios.get(pullUrl, {
@@ -125,4 +83,39 @@ async function getLLMReponse(diffText: string) {
     const llmResponse = await prReviewLLMResponse(model, version, diffText)
     const convertedJSON = JSON.parse(llmResponse);
     return convertedJSON
+}
+
+function filterDiff(diffContent: string) {
+    // Split the diff into lines for easier processing
+    const lines = diffContent.split('\n');
+
+    // Flag to indicate if we are within a block that should be retained
+    let retainBlock = false;
+
+    // Define patterns that indicate the start of code file diffs
+    const codeFilePatterns = [
+		/^diff --git a\/.*\.tsx b\/.*\.tsx$/, // TSX files
+        /^diff --git a\/.*\.ts b\/.*\.ts$/,   // TypeScript files
+        /^diff --git a\/.*\.js b\/.*\.js$/,   // JavaScript files
+        /^diff --git a\/.*\.jsx b\/.*\.jsx$/, // JSX files
+        /^diff --git a\/.*\.html b\/.*\.html$/, // HTML files
+        // /^diff --git a\/.*\.scss b\/.*\.scss$/, // SCSS files
+        // /^diff --git a\/.*\.css b\/.*\.css$/  // CSS files
+    ];
+
+    // Filter lines, retaining only blocks that match the code file patterns
+    const filteredLines = lines.filter(line => {
+        if (codeFilePatterns.some(pattern => pattern.test(line))) {
+            retainBlock = true;  // Start retaining this block
+            return true; // Ensure the diff --git line itself is also retained
+        } else if (line.startsWith('diff --git') && retainBlock) {
+            retainBlock = false; // End of the retained block and start of a new block
+        }
+
+        // Return true to keep the line, false to remove it
+        return retainBlock;
+    });
+
+    // Join the remaining lines back into a single string
+    return filteredLines.join('\n');
 }
