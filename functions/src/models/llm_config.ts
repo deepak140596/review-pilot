@@ -23,7 +23,3 @@ interface LLMAPIKeys {
     gpt4: string;
     gemini: string;
 }
-
-"claude-3-opus-20240229"
-"gemini-1.0-pro"
-"gpt-4-turbo"
