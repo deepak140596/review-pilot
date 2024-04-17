@@ -1,10 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-const API_KEY = "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";
-
-export async function callClaude(version: string, inputText: string) {
+export async function callClaude(apiKey: string, version: string, inputText: string) {
     const anthropic = new Anthropic({
-        apiKey: API_KEY,
+        apiKey: apiKey,
     });
 
     const result = await anthropic.messages.create({

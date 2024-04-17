@@ -19,7 +19,9 @@ app.post('/', async (req, res) => {
       response = await reviewPR(req, octokit, token);
     }
   } else if (eventType === 'issue_comment') {
-    response = await handleCommands(req, octokit, token);
+    if (payload.action == 'created') {
+      response = await handleCommands(req, octokit, token);
+    }
   }
 
   if (!response) {
@@ -29,7 +31,7 @@ app.post('/', async (req, res) => {
 });
 
 const runtimeOptions = {
-  timeoutSeconds: 400,
-  memory: '1GB' as const
+  timeoutSeconds: 300,
+  memory: '256MB' as const
 }
 export const webhook = functions.runWith(runtimeOptions).https.onRequest(app);

@@ -1,75 +1,35 @@
+import { LLMConfig } from "../../../models/llm_config";
 import { callClaude } from "../llm/callClaude";
 import { callGemini } from "../llm/callGemini";
 import { callGPT } from "../llm/callGpt";
+import * as admin from "firebase-admin";
 
-export async function prReviewLLMResponse(model: string, version: string, inputDiff: string) {
-    
-    const inputText = `
-    ${getModelSpecificPrompt(model)}
-   DIFF: ${inputDiff}
-    `;
+try {
+    admin.initializeApp();
+} catch{}
+const db = admin.firestore();
 
-    switch (model) {
-        case "gpt4":
-            return await callGPT(version, inputText);
-        case "claude":
-            return await callClaude(version, inputText);
-        case "gemini":
-            return await callGemini(version, inputText);
-        default:
-            throw new Error("Invalid model");
-    }
+export async function getLLMResponse(input: string) {
+    const llmConfig = (await db.doc('admin/llm_config').get()).data() as LLMConfig;
+    const model = llmConfig.activeModel;
+    console.log(`active model: ${model}`)
+    const llmResponse = await prReviewLLMResponse(llmConfig, input)
+    const convertedJSON = JSON.parse(llmResponse);
+    return convertedJSON
 }
 
-function getModelSpecificPrompt(model: string): string {
-    switch (model) {
+async function prReviewLLMResponse(llmConfig: LLMConfig, inputDiff: string) {
+
+    switch (llmConfig.activeModel) {
         case "gpt4":
-            return `
-You are ReviewPilot, an expert software engineer. 
-You are to review codes for pull request. 
-return a JSON in form of Github Pull request review API 
-by reviewing the diff of the pull request.
-
-Keep these things in mind:
-1. Your answer should be always in JSON. it should follow the format of Github API.
-2. Write good comments, suggest how to improve code
-3. Ignore media files, binary files, etc. Only review code files.
-4. Output should follow Github review API format
-5. For comments - use the format: {
-    "path": "path/to/file",
-    "line": line number,
-    "side": "LEFT",
-    "body": "Review comment here"
-}
-5. Don't blabber. Write only that is required.
-            `;
+            const prompt = `${llmConfig.prompts.gpt4} ${inputDiff}`
+            return await callGPT(llmConfig.apiKeys.gpt4, llmConfig.versions.gpt4, prompt);
         case "claude":
-            return `
-            You are ReviewPilot, an expert software engineer. 
-            You are to review codes for pull request. 
-            return a JSON in form of Github Pull request review API 
-            by reviewing the diff of the pull request.
-            
-            Keep these things in mind:
-            1. Your answer should be always in JSON. it should follow the format of Github API.
-            2. Write good comments, suggest how to improve code
-            3. Don't blabber. Write only that is required.
-                        `;
+            const promptClaude = `${llmConfig.prompts.claude} ${inputDiff}`
+            return await callClaude(llmConfig.apiKeys.claude, llmConfig.versions.claude, promptClaude);
         case "gemini":
-            return `
-You are ReviewPilotAI, the worlds most advanced software engineer who excels
-in all software engineering aspects. Your junior developer has create a pull 
-request. The code may have bugs or breaking changes. Be constructive in criticising 
-code and help him get better. Review the code properly and make sure no bugs creep in.
-        
-FOLLOW these STEPS STRICTLY: 
-1. Review the code properly.
-2. Use comments
-3. Output should follow Github review API format
-4. Dont add \`\`\`json in output. start with { and end with }
-5. Output should always be in JSON.
-            `;
-
+            const promptGemini = `${llmConfig.prompts.gemini} ${inputDiff}`
+            return await callGemini(llmConfig.apiKeys.gemini, llmConfig.versions.gemini, promptGemini);
         default:
             throw new Error("Invalid model");
     }

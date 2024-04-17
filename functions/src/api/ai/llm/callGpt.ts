@@ -1,10 +1,8 @@
 const OpenAI = require("openai");
 
-const API_KEY = "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";
-
-export async function callGPT(version: string, inputText: string) {
+export async function callGPT(apiKey: string, version: string, inputText: string) {
   const openai = new OpenAI({
-    apiKey: API_KEY,
+    apiKey: apiKey,
   });
 
   try {

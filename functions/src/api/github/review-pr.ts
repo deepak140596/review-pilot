@@ -1,13 +1,9 @@
 import { Octokit } from "octokit";
-import * as admin from "firebase-admin";
 import * as express from 'express';
-import { prReviewLLMResponse } from "../ai/prompts/review-prompt";
+import { getLLMResponse } from "../ai/prompts/review-prompt";
 import axios from "axios";
 
-try {
-    admin.initializeApp();
-} catch{}
-const db = admin.firestore();
+
 
 export async function reviewPR(req: express.Request, octokit: Octokit, token: string) {
     const prNumber = req.body.pull_request.number as number;
@@ -20,7 +16,7 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
     await deletePendingReview(owner, repoName, prNumber, octokit);
     const diffText = await getDiff(pullUrl, token);
     const filteredDiff = filterDiff(diffText);
-    const llmResponse = await getLLMReponse(filteredDiff);
+    const llmResponse = await getLLMResponse(filteredDiff);
     const body = llmResponse.body;
     const comments = llmResponse.comments;
     console.log(`LLM Response Body: ${body} comments: ${JSON.stringify(comments)}`);
@@ -74,16 +70,6 @@ async function findPendingReview(owner: string, repo: string, pull_number: numbe
     const pendingReview = reviews.find(review => review.state === "PENDING");
     return pendingReview;
   }
-
-async function getLLMReponse(diffText: string) {
-    const llmConfig = (await db.doc('admin/llm').get()).data() ?? {};
-    const model = llmConfig.model;
-    const version = llmConfig.version;
-    console.log(`model: ${model}  version: ${version}`)
-    const llmResponse = await prReviewLLMResponse(model, version, diffText)
-    const convertedJSON = JSON.parse(llmResponse);
-    return convertedJSON
-}
 
 function filterDiff(diffContent: string) {
     // Split the diff into lines for easier processing
