@@ -23,13 +23,13 @@ async function prReviewLLMResponse(llmConfig: LLMConfig, inputDiff: string) {
     switch (llmConfig.activeModel) {
         case "gpt4":
             const prompt = `${llmConfig.prompts.gpt4} ${inputDiff}`
-            return await callGPT(llmConfig.apiKeys.gpt4, llmConfig.versions.gpt4, prompt);
+            return callGPT(llmConfig.apiKeys.gpt4, llmConfig.versions.gpt4, prompt);
         case "claude":
             const promptClaude = `${llmConfig.prompts.claude} ${inputDiff}`
-            return await callClaude(llmConfig.apiKeys.claude, llmConfig.versions.claude, promptClaude);
+            return callClaude(llmConfig.apiKeys.claude, llmConfig.versions.claude, promptClaude);
         case "gemini":
             const promptGemini = `${llmConfig.prompts.gemini} ${inputDiff}`
-            return await callGemini(llmConfig.apiKeys.gemini, llmConfig.versions.gemini, promptGemini);
+            return callGemini(llmConfig.apiKeys.gemini, llmConfig.versions.gemini, promptGemini);
         default:
             throw new Error("Invalid model");
     }

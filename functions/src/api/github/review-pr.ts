@@ -3,8 +3,6 @@ import * as express from 'express';
 import { getLLMResponse } from "../ai/prompts/review-prompt";
 import axios from "axios";
 
-
-
 export async function reviewPR(req: express.Request, octokit: Octokit, token: string) {
     const prNumber = req.body.pull_request.number as number;
     const repoName = req.body.repository.name as string;
@@ -15,19 +13,20 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
 
     await deletePendingReview(owner, repoName, prNumber, octokit);
     const diffText = await getDiff(pullUrl, token);
-    const filteredDiff = filterDiff(diffText);
-    const llmResponse = await getLLMResponse(filteredDiff);
-    const body = llmResponse.body;
-    const comments = llmResponse.comments;
-    console.log(`LLM Response Body: ${body} comments: ${JSON.stringify(comments)}`);
+    // const filteredDiff = filterDiff(diffText);
+    // const llmResponse = await getLLMResponse(filteredDiff);
+    // const body = llmResponse.body;
+    // const comments = llmResponse.comments;
+    const comments = await getCommmentsFromLLm(diffText);
+    console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
 
     const review = await octokit.rest.pulls.createReview({
         owner: owner,
         repo: repoName,
         pull_number: prNumber,
-        body: llmResponse.body,
+        body: 'Here are some suggestions for your PR:\n\n',
         event: 'COMMENT',
-        comments: llmResponse.comments
+        comments: comments
     });
 
     return review;
@@ -71,6 +70,27 @@ async function findPendingReview(owner: string, repo: string, pull_number: numbe
     return pendingReview;
   }
 
+async function getCommmentsFromLLm(diff: string) {
+    const filteredDiff = filterDiff(diff);
+    const fileSections = splitDiff(filteredDiff);
+    const groups = splitIntoGroups(fileSections, 10); // Splits into 10 groups
+
+    console.log(`Groups length: ${groups.length}`);
+    const promises = groups.map(async group => {
+        return getLLMResponse(group);
+    });
+    const responses = await Promise.all(promises);
+    var comments : any[] =  [];
+
+    responses.forEach(response => {
+        const commentsFromResponse : any[] = response.comments;
+        comments.push(...commentsFromResponse);
+        console.log(`Comments: ${JSON.stringify(commentsFromResponse)}`);
+    });
+
+    return comments;
+}
+
 function filterDiff(diffContent: string) {
     // Split the diff into lines for easier processing
     const lines = diffContent.split('\n');
@@ -104,4 +124,53 @@ function filterDiff(diffContent: string) {
 
     // Join the remaining lines back into a single string
     return filteredLines.join('\n');
+}
+
+function splitDiff(diff: string): string[][] {
+    const lines = diff.split('\n');
+
+    // Store arrays of lines, each array is one file's diff
+    let currentFileLines: string[] = [];
+    const fileSections: string[][] = [];
+
+    lines.forEach(line => {
+        if (line.startsWith('diff --git')) {
+            if (currentFileLines.length > 0) {
+                fileSections.push(currentFileLines);
+                currentFileLines = [];
+            }
+        }
+        currentFileLines.push(line);
+    });
+
+    // Don't forget to add the last set of lines
+    if (currentFileLines.length > 0) {
+        fileSections.push(currentFileLines);
+    }
+
+    return fileSections;
+}
+
+function splitIntoGroups(fileSections: string[][], numberOfGroups : number): string[] {
+    const groups: string[][] = new Array(numberOfGroups).fill(null).map(() => []);
+    let currentGroupIndex = 0;
+
+    fileSections.forEach(section => {
+        const group = groups[currentGroupIndex];
+        group.push(section.join('\n')); // Add the whole file section as a single string
+
+        // Move to the next group, wrap around if necessary
+        currentGroupIndex = (currentGroupIndex + 1) % numberOfGroups;
+    });
+
+    const filteredGroup = groups.filter((group, index) => {
+       return group.length > 0
+    })
+
+    let splitGroups: string[] = []
+    filteredGroup.forEach((group, index) => {
+       const joinedFile = group.join('\n')
+       splitGroups.push(joinedFile)
+    })
+    return splitGroups;
 }
