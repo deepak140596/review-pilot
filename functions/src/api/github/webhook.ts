@@ -1,19 +1,37 @@
-// /functions/src/api/github/webhook.ts
 import * as functions from 'firebase-functions';
 import * as express from 'express';
+import { reviewPR } from './review-pr';
+import { handleCommands } from './handle-commands';
+import { getAuthenticatedOctokit } from './octokit';
 
 const app = express();
 
-app.post('/', (req, res) => {
+app.post('/', async (req, res) => {
   const eventType = req.headers['x-github-event'];
   const payload = req.body;
+  var response;
 
-  console.log(`Received GitHub event: ${eventType}`, payload);
+  const { octokit, token } = await getAuthenticatedOctokit(req);
 
-  // Here, you'd handle different event types and their payloads
-  // For example, if (eventType === 'push') { ... }
+  if (eventType === 'pull_request') {
+    const action = payload.action;
+    if (action == "opened" || action == "reopened") {
+      response = await reviewPR(req, octokit, token);
+    }
+  } else if (eventType === 'issue_comment') {
+    if (payload.action == 'created') {
+      response = await handleCommands(req, octokit, token);
+    }
+  }
 
-  res.status(200).send('Webhook received');
+  if (!response) {
+    response = { message: 'No action taken' };
+  }
+  res.status(200).send(response);
 });
 
-export const webhook = functions.https.onRequest(app);
+const runtimeOptions = {
+  timeoutSeconds: 300,
+  memory: '256MB' as const
+}
+export const webhook = functions.runWith(runtimeOptions).https.onRequest(app);
