@@ -11,10 +11,9 @@ const db = admin.firestore();
 
 export async function getLLMResponse(input: string) {
     const llmConfig = (await db.doc('admin/llm_config').get()).data() as LLMConfig;
-    const model = llmConfig.activeModel;
-    console.log(`active model: ${model}`)
     const llmResponse = await prReviewLLMResponse(llmConfig, input)
-    const convertedJSON = JSON.parse(llmResponse);
+    const formattedResposne = llmResponse.replace(`\`\`\`json`, '').replace(`\`\`\``, '')
+    const convertedJSON = JSON.parse(formattedResposne);
     return convertedJSON
 }
 

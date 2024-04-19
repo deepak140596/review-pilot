@@ -13,10 +13,6 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
 
     await deletePendingReview(owner, repoName, prNumber, octokit);
     const diffText = await getDiff(pullUrl, token);
-    // const filteredDiff = filterDiff(diffText);
-    // const llmResponse = await getLLMResponse(filteredDiff);
-    // const body = llmResponse.body;
-    // const comments = llmResponse.comments;
     const comments = await getCommmentsFromLLm(diffText);
     console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
 
@@ -84,8 +80,8 @@ async function getCommmentsFromLLm(diff: string) {
 
     responses.forEach(response => {
         const commentsFromResponse : any[] = response.comments;
-        comments.push(...commentsFromResponse);
         console.log(`Comments: ${JSON.stringify(commentsFromResponse)}`);
+        comments.push(...commentsFromResponse);
     });
 
     return comments;
