@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           if (user && token) {
             setGithubToken(token);
             setCurrentUser(user);
-            setGithubTokenToDB(token);
+            setGithubTokenToDB(user, token);
             resolve(user);
           }
         }).catch((error) => {
