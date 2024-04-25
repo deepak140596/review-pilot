@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot, DocumentData, Timestamp, onSnapshot, FirestoreError } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot, DocumentData, Timestamp, onSnapshot, FirestoreError, query, Query, QueryConstraint } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
@@ -63,7 +63,6 @@ function convertTimestamps(obj: any): any {
       }
     }
   
-    // Read all documents from a collection and return them as a list of the specified type
     static async getAllDocuments<T>(collectionPath: string): Promise<T[]> {
       try {
         console.log('collectionPath', collectionPath);
@@ -96,6 +95,35 @@ function convertTimestamps(obj: any): any {
             onError(error);
           } else {
             console.error("Error listening to documents:", error);
+          }
+        }
+      );
+    
+      // Return the unsubscribe function so the caller can stop listening when needed
+      return unsubscribe;
+    }
+
+    // Get query snapshot listener for a collection
+    static listenToQueryCollection<T>(
+      collectionPath: string,
+      onCollectionUpdate: (documents: T[]) => void,
+      onError?: (error: FirestoreError) => void,
+      ...queryConstraints: QueryConstraint[]
+    ): () => void {
+      const queryCollection = query(collection(firestoreDB, collectionPath), ...queryConstraints);
+      const unsubscribe = onSnapshot(queryCollection,
+        (querySnapshot) => {
+          let documents: T[] = [];
+          querySnapshot.forEach((doc) => {
+            documents.push(docToData<T>(doc));
+          });
+          onCollectionUpdate(documents);
+        }, 
+        (error) => {
+          if (onError) {
+            onError(error);
+          } else {
+            console.error("Error listening to collection:", error);
           }
         }
       );
