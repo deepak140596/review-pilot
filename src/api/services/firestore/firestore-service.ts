@@ -62,6 +62,33 @@ function convertTimestamps(obj: any): any {
         throw error;
       }
     }
+
+    static listenToDocument<T>(
+      documentPath: string,
+      onDocumentReceived: (document: T) => void,
+      onError?: (error: FirestoreError) => void
+    ): () => void  {
+      const docRef = doc(firestoreDB, documentPath);
+      const unsubscribe = onSnapshot(docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            onDocumentReceived(docToData<T>(docSnap));
+          } else {
+            console.error('Document does not exist!');
+          }
+        }, 
+        (error) => {
+          if (onError) {
+            onError(error);
+          } else {
+            console.error("Error listening to document:", error);
+          }
+        }
+      );
+    
+      // Return the unsubscribe function so the caller can stop listening when needed
+      return unsubscribe;
+    }
   
     static async getAllDocuments<T>(collectionPath: string): Promise<T[]> {
       try {

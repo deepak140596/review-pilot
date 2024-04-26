@@ -1,5 +1,5 @@
 import './dashboard.scss';
-import { Layout, Menu } from 'antd';
+import { Button, Layout, Menu } from 'antd';
 import {
   DashboardOutlined,
   CodeOutlined,
@@ -14,18 +14,14 @@ import { useAuth } from '../../context/auth-context';
 import { useState } from 'react';
 import Overview from './overview/overview';
 import Repositories from './repositories/repositories';
+import { Link, Route, Routes } from 'react-router-dom';
+import ConfigureProject from '../configure/project/configure-project';
+import ConfigureOrganisation from '../configure/organisation/configure-organisation';
 
 const { Header, Sider } = Layout;
 
 const Dashboard = () => {
-
   const { logout } = useAuth();
-  const [activeComponent, setActiveComponent] = useState(<Overview />);
-
-  const handleMenuClick = (component: JSX.Element) => {
-    console.log('component', component);
-    setActiveComponent(component);
-  };
 
   return (
     <Layout className="dashboard-layout">
@@ -38,22 +34,20 @@ const Dashboard = () => {
         </Menu>
       </Header>
       <Layout>
-        <Sider width={200} className="dashboard-sidebar">
+        <Sider width={250} className="dashboard-sidebar">
           <Menu
             mode="inline"
-            defaultSelectedKeys={['1']}
-            defaultOpenKeys={['sub1']}
-            className="dashboard-sidebar__menu"
+            defaultSelectedKeys={['2']}
+            className="dashboard-sidebar-menu"
           >
-            <Menu.Item key="1" 
+            {/* <Menu.Item key="1" 
               icon={<DashboardOutlined />}
               onClick={() => handleMenuClick(<Overview />)}>
               Overview
-            </Menu.Item>
+            </Menu.Item> */}
             <Menu.Item key="2" 
-              icon={<CodeOutlined />} 
-              onClick={() => handleMenuClick(<Repositories />)}>
-              Repositories
+              icon={<CodeOutlined />} >
+                <Link to="/dashboard/repositories">Repositories</Link>
             </Menu.Item>
             <Menu.Item key="3" 
               icon={<BuildOutlined />}>
@@ -65,17 +59,28 @@ const Dashboard = () => {
             </Menu.Item>
             <Menu.Item key="5" 
               icon={<SettingOutlined />}>
-              Organisation
+              <Link to="/dashboard/organisation">Organisation</Link>
             </Menu.Item>
             <Menu.Item key="6" 
               icon={<DollarOutlined />}>
               Subscription
             </Menu.Item>
           </Menu>
+
+          {/* <div className="dashboard-sidebar-footer">
+            <Button block icon={<LogoutOutlined />} onClick={logout}>
+              Logout
+            </Button>
+          </div> */}
         </Sider>
 
         <Layout className="dashboard-content">
-          {activeComponent}
+          <Routes>
+            <Route path="/" element={<Repositories />} />
+            <Route path="/repositories" element={<Repositories />} />
+            <Route path="/configure-project/:projectId" element={<ConfigureProject />} />
+            <Route path="/organisation" element={<ConfigureOrganisation />} />
+          </Routes>
         </Layout>
       </Layout>
     </Layout>

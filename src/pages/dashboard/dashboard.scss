@@ -14,11 +14,17 @@
 
 .dashboard-sidebar {
   background: #fff;
+}
 
-  &__menu {
-    height: 100%;
-    border-right: 0;
-  }
+.dashboard-sidebar-menu {
+  border-right: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.dashboard-sidebar-footer {
+  padding: 24px;
+  text-align: center;
 }
 
 .dashboard-content {
