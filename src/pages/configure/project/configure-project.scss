@@ -1,0 +1,59 @@
+.reviewSettings {
+    &__header {
+        display: flex;
+        margin-bottom: 24px;
+        align-items: center;
+
+        .applyChangesButton {
+            margin-left: auto;
+        }
+    }
+
+    &__tabs {
+        .ant-tabs-nav {
+            margin-bottom: 0;
+        }
+    }
+
+    &__tabContent {
+        padding: 16px;
+        background: #fff;
+        border: 1px solid #f0f0f0;
+
+        .ant-select,
+        .ant-switch {
+            margin-bottom: 16px;
+        }
+
+        .instructionButton {
+            margin-top: 16px;
+        }
+
+        .settingsHorizontalItem {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+
+            .settingsItemLabel {
+                margin-right: 8px;
+            }
+        }
+
+        .settingsVerticalItem {
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+
+            .settingsItemLabel {
+                margin-right: 8px;
+            }
+        }
+    }
+
+    .backButton {
+        margin-right: 16px;
+        margin-top: 4px;
+        cursor: pointer;
+    }
+}

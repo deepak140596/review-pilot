@@ -10,7 +10,7 @@ import { RootState } from "../../../store/store";
 const installationUrl = 'https://github.com/apps/reviewpilot-ai/installations/new';
 const Repositories = () => {
 
-    const {data: repositories, error} = useSelector((state: RootState) => state.repositories)
+    const { data: repositories } = useSelector((state: RootState) => state.repositories)
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
