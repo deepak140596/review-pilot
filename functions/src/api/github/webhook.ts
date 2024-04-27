@@ -101,11 +101,11 @@ async function processInstallationCreatedEvent(payload: any) {
   account.installation_id = installationId;
   if (accountType === 'Organization') {
     sender.organisations = admin.firestore.FieldValue.arrayUnion(accountLogin);
-    account.users = admin.firestore.FieldValue.arrayUnion(sender.login);
+    account.users = admin.firestore.FieldValue.arrayUnion(sender.id);
     batch.set(db.collection('organisations').doc(accountLogin), account);
   }
 
-  const userId = (await db.collection('users').where('login', '==', sender.login).get()).docs;
+  const userId = (await db.collection('users').where('id', '==', sender.id).get()).docs;
   console.log(`User ID: ${userId}`);
   if (userId && userId.length > 0) {
     const uid = userId[0].id;
