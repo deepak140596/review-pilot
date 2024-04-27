@@ -92,7 +92,6 @@ function convertTimestamps(obj: any): any {
   
     static async getAllDocuments<T>(collectionPath: string): Promise<T[]> {
       try {
-        console.log('collectionPath', collectionPath);
         const querySnapshot = await getDocs(collection(firestoreDB, collectionPath));
         let documents: T[] = [];
         querySnapshot.forEach((doc) => {
@@ -172,8 +171,6 @@ function convertTimestamps(obj: any): any {
     // Update an existing document and return the updated document as the specified type
     static async updateDocument(collectionPath: string, docId: string, fieldsToUpdate: Record<string, any>): Promise<void> {
       try {
-        console.log('collectionPath', collectionPath);
-        console.log('docId', docId);
         const docRef = doc(firestoreDB, `${collectionPath}/${docId}`);
         await setDoc(docRef, fieldsToUpdate, { merge: true });
       } catch (error) {

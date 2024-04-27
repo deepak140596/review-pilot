@@ -7,11 +7,12 @@ export function setGithubTokenToDB(
     user: User,
     token: string | null | undefined
 ): void {
-    FirestoreService.updateDocument('users', uid, { 
+    FirestoreService.updateDocument('users', uid(), { 
         token: token,
-        user_id: uid,
-        last_login: new Date(),
-        login: user.displayName,
+        user_id: uid(),
+        // last_login: new Date(),
+        full_name: user.displayName,
+        provider: user.providerData,
      });
 }
 
@@ -20,6 +21,17 @@ export function setRepositorySettingsToDB(
     settings: RepositorySettings
 ): void {
     FirestoreService.updateDocument('repositories', `${repositoryId}`, {
+        repository_settings: settings
+    });
+}
+
+export function setOrganisationSettingsToDB(
+    accountId: string,
+    type: string,
+    settings: RepositorySettings
+): void {
+    const collection = type === 'User' ? 'users' : 'organisations';
+    FirestoreService.updateDocument(collection, `${accountId}`, {
         repository_settings: settings
     });
 }

@@ -1,53 +1,38 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { subscribeToRepository } from "../../../store/repositories-slice";
 import { RootState } from "../../../store/store";
 import { Button } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
-import { RepositorySettings } from "../../../api/models/repository";
-import { setRepositorySettingsToDB } from "../../../api/services/firestore/firestore-setter";
+import { RepositorySettings, defaultRepositorySettings } from "../../../api/models/repository";
 import { ConfigureSettings } from "../../../components/configure-settings/configure-settings";
 import "./configure-organisation.scss";
+import { subscribeToUserAccount } from "../../../store/account-slice";
+import { setOrganisationSettingsToDB } from "../../../api/services/firestore/firestore-setter";
+import { uid } from "../../../context/auth-context";
 
 const ConfigureOrganisation = () => {
-    const defaultRepositorySettings: RepositorySettings = {
-        automated_reviews: false,
-        draft_pull_request_reviews: true,
-        high_level_summary: false,
-        ignore_title_keywords: "",
-        target_branches: "",
-    };
-    
-    const { data: repository } = useSelector((state: RootState)=> state.repository);
+    const { data: userAccount } = useSelector((state: RootState)=> state.userAccount);
     const [ applyChangesButtonDisabled, setApplyChangesButtonDisabled ] = useState(true);
-    const [ repositorySettings, setRepositorySettings ] = useState(repository?.repository_settings ?? defaultRepositorySettings);
-    const navigate = useNavigate();
+    const [ repositorySettings, setRepositorySettings ] = useState(userAccount?.repository_settings ?? defaultRepositorySettings);
 
-    const goBack = () => {
-        navigate("/dashboard/repositories")
-    }
     const dispatch = useDispatch();
 
     useEffect(() => {
-        
-    }, [dispatch])
+        dispatch(subscribeToUserAccount())
+    }, [dispatch, userAccount])
 
     const applyChanges = () => {
-        if (repository) {
-            // set settings to org level
-        }
+        setOrganisationSettingsToDB(uid(),"User",repositorySettings)
     }
 
     useEffect(() => {
         const checkForChanges = () => {
-            const hasChanges = JSON.stringify(repository?.repository_settings ?? defaultRepositorySettings) 
+            const hasChanges = JSON.stringify(userAccount?.repository_settings ?? defaultRepositorySettings) 
                 !== JSON.stringify(repositorySettings);
             setApplyChangesButtonDisabled(!hasChanges);
         };
 
         checkForChanges();
-    }, [repositorySettings, repository]);
+    }, [repositorySettings, userAccount]);
 
     const handleSwitchChange = (settingName: string, value: boolean) => {
         setRepositorySettings(prevSettings => ({
@@ -67,9 +52,6 @@ const ConfigureOrganisation = () => {
     return (
         <div className="reviewSettings">
             <div className="reviewSettings__header">    
-                <div className="backButton" onClick={goBack} >
-                    <ArrowLeftOutlined />   
-                </div>
                 <h2>Organisation Settings</h2>
                 <Button type="primary" className="applyChangesButton" 
                     disabled={applyChangesButtonDisabled}

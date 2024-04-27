@@ -5,19 +5,12 @@ import { subscribeToRepository } from "../../../store/repositories-slice";
 import { RootState } from "../../../store/store";
 import { Button } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { RepositorySettings } from "../../../api/models/repository";
+import { RepositorySettings, defaultRepositorySettings } from "../../../api/models/repository";
 import { setRepositorySettingsToDB } from "../../../api/services/firestore/firestore-setter";
 import { ConfigureSettings } from "../../../components/configure-settings/configure-settings";
 import "./configure-project.scss";
 
 const ConfigureProject = () => {
-    const defaultRepositorySettings: RepositorySettings = {
-        automated_reviews: false,
-        draft_pull_request_reviews: true,
-        high_level_summary: false,
-        ignore_title_keywords: "",
-        target_branches: "",
-    };
     const { projectId } = useParams<{ projectId: string }>();
     const { data: repository } = useSelector((state: RootState)=> state.repository);
     const [ applyChangesButtonDisabled, setApplyChangesButtonDisabled ] = useState(true);

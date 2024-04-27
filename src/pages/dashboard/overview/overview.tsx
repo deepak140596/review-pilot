@@ -16,7 +16,7 @@ const Overview = () => {
     };
 
     useEffect( () => {
-        dispatch(subscribeToRepositories("deepak140596"));
+        dispatch(subscribeToRepositories(34840023));
     }, [dispatch]);
 
     return (

@@ -6,11 +6,13 @@ import { Button, List } from "antd";
 import { useNavigate } from "react-router-dom";
 import { Repository } from "../../../api/models/repository";
 import { RootState } from "../../../store/store";
+import { subscribeToUserAccount } from "../../../store/account-slice";
 
 const installationUrl = 'https://github.com/apps/reviewpilot-ai/installations/new';
 const Repositories = () => {
 
     const { data: repositories } = useSelector((state: RootState) => state.repositories)
+    const { data: userAccount } = useSelector((state: RootState) => state.userAccount)
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -23,8 +25,13 @@ const Repositories = () => {
     }
 
     useEffect( () => {
-        dispatch(subscribeToRepositories("deepak140596"));
-    }, [dispatch]);
+        if (!userAccount) return;
+        dispatch(subscribeToRepositories(userAccount?.id ));
+    }, [dispatch, userAccount]);
+
+    useEffect(() => {
+        dispatch(subscribeToUserAccount())
+    }, [dispatch])
 
     return (
         <Layout> 

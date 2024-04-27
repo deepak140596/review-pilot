@@ -70,6 +70,7 @@ async function processInstallationCreatedEvent(payload: any) {
   const installationId: number = payload.installation.id;
   const accountType: string = account.type; // User or Organization
   const accountLogin: string = account.login;
+  const accountId: string = account.id;
   const repositories: any[] = payload.repositories;
   const sender = payload.sender;
 
@@ -77,7 +78,8 @@ async function processInstallationCreatedEvent(payload: any) {
   var batchCount = 0;
 
   repositories.forEach(async (repo) => {
-    repo.account_id = accountLogin;
+    repo.account_id = accountId;
+    repo.account_login = accountLogin;
     repo.installation_id = installationId;
     repo.account_type = accountType;
     repo.active = true;
@@ -133,10 +135,21 @@ async function processInstallationDeletedEvent(payload: any) {
 
 async function processRepositoriesAddedEvent(payload: any) {
   const addedRepositories: any[] = payload.repositories_added;
+  const account = payload.installation.account;
+  const installationId: number = payload.installation.id;
+  const accountType: string = account.type; // User or Organization
+  const accountLogin: string = account.login;
+  const accountId: string = account.id;
 
   var batch = db.batch();
   var batchCount = 0;
   addedRepositories.forEach(async (repo) => {
+    repo.account_id = accountId;
+    repo.account_login = accountLogin;
+    repo.installation_id = installationId;
+    repo.account_type = accountType;
+    repo.active = true;
+
     const docRef = db.collection('repositories').doc(repo.id.toString());
     batch.set(docRef, repo);
     batchCount++;
@@ -157,7 +170,7 @@ async function processRepositoriesRemovedEvent(payload: any) {
   var batchCount = 0;
   removedRepositories.forEach(async (repo) => {
     const docRef = db.collection('repositories').doc(repo.id.toString());
-    batch.delete(docRef);
+    batch.update(docRef, { active: false });
     batchCount++;
     if (batchCount % 499 === 0) {
       await batch.commit();

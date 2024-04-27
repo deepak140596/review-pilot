@@ -18,3 +18,11 @@ export interface RepositorySettings {
     target_branches: string;
     ignore_title_keywords: string;
 }
+
+export const defaultRepositorySettings: RepositorySettings = {
+    automated_reviews: false,
+    draft_pull_request_reviews: true,
+    high_level_summary: false,
+    ignore_title_keywords: "",
+    target_branches: "",
+};

@@ -24,7 +24,7 @@ const initialStateForSingleRepository: DataState<Repository> = {
 
 export const subscribeToRepositories = createAsyncThunk(
     "repositories/subsribeToRepositories",
-    async (accountId: string, { dispatch }) => {
+    async (accountId: number, { dispatch }) => {
         FirestoreService.listenToQueryCollection<Repository>(
             "repositories",
             (repositories) => {
