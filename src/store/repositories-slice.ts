@@ -33,7 +33,8 @@ export const subscribeToRepositories = createAsyncThunk(
             (error) => {
                 dispatch(setErrorWhileGettingRepositories(error.message));
             },
-            where("account_id", "==", accountId)
+            where("account_id", "==", accountId),
+            where("active", "==", true)
         );
     }
 );

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Repository } from "../../../api/models/repository";
 import { RootState } from "../../../store/store";
 import { subscribeToUserAccount } from "../../../store/account-slice";
+import "./repositories.scss"
 
 const installationUrl = 'https://github.com/apps/reviewpilot-ai/installations/new';
 const Repositories = () => {
@@ -36,6 +37,11 @@ const Repositories = () => {
     return (
         <Layout> 
             {repositories && repositories.length > 0 ?
+            <div>
+                <Button type="primary" onClick={handleInstalation} className="button">
+                    Add Repositories
+                </Button>
+                
                 <List
                     itemLayout="horizontal"
                     dataSource={repositories}
@@ -54,6 +60,8 @@ const Repositories = () => {
                         </List.Item>
                     )}
                 />
+                
+            </div>
                 :
                 <Button type="primary" onClick={handleInstalation}>
                     Install ReviewPilot AI
