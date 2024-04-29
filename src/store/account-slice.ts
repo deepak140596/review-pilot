@@ -3,11 +3,14 @@ import { FirestoreService } from "../api/services/firestore/firestore-service";
 import { Account } from "../api/models/account";
 import { DataState } from "./store";
 import { uid } from "../context/auth-context";
+import { where } from "firebase/firestore";
 
 export const setOrganisation = createAction<Account>("account/setOrganisation");
 export const setErrorWhileGettingOrganisation = createAction<string | null>("account/setErrorWhileGettingOrganisation");
 export const setUserAccount = createAction<Account>("account/setUserAccount");
 export const setUserAccountError = createAction<string | null>("account/setUserAccountError");
+export const setUserOrganisations = createAction<Account[]>("account/setUserOrganisations");
+export const setUserOrganisationsError = createAction<string | null>("account/setUserOrganisationsError");
 
 export const initialStateForOrganisation: DataState<Account> = {
     loading: false,
@@ -19,6 +22,12 @@ export const initialStateForUserAccount: DataState<Account> = {
     loading: false,
     error: null,
     data: null
+}
+
+export const initialStateForUserOrganisations: DataState<Account[]> = {
+    loading: false,
+    error: null,
+    data: []
 }
 
 export const subscribeToOrganisation = createAsyncThunk(
@@ -51,6 +60,22 @@ export const subscribeToUserAccount = createAsyncThunk(
     }
 );
 
+export const subscribeToUserOrganisations = createAsyncThunk(
+    "account/subscribeToUserOrganisations",
+    async (accountId: number,{ dispatch }) => {
+        FirestoreService.listenToQueryCollection<Account>(
+            `organisations`,
+            (organisations) => {
+                dispatch(setUserOrganisations(organisations));
+            },
+            (error) => {
+                dispatch(setUserOrganisationsError(error.message));
+            },
+            where("users", "array-contains", accountId)
+        );
+    }
+);
+
 export const organisationSlice = createSlice({
     name: "organisation",
     initialState: initialStateForOrganisation,
@@ -79,6 +104,23 @@ export const userAccountSlice = createSlice({
             state.data = action.payload;
         });
         builder.addCase(setUserAccountError, (state: DataState<Account>, action: any) => {
+            state.loading = false;
+            state.error = action.error.message;
+        });
+    }
+});
+
+export const userOrganisationsSlice = createSlice({
+    name: "userOrganisations",
+    initialState: initialStateForUserOrganisations,
+    reducers: {},
+    extraReducers: (builder: any) => {
+        builder.addCase(setUserOrganisations, (state: DataState<Account[]>, action: any) => {
+            state.loading = false;
+            state.error = null;
+            state.data = action.payload;
+        });
+        builder.addCase(setUserOrganisationsError, (state: DataState<Account[]>, action: any) => {
             state.loading = false;
             state.error = action.error.message;
         });

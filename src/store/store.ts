@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import {repositorySlice, repositoriesSlice} from "./repositories-slice";
-import { organisationSlice, userAccountSlice } from "./account-slice";
+import { organisationSlice, userAccountSlice, userOrganisationsSlice } from "./account-slice";
 
 export interface DataState<T> {
     loading: boolean;
@@ -13,7 +13,8 @@ export const store = configureStore({
         repositories: repositoriesSlice.reducer,
         repository: repositorySlice.reducer,
         userAccount: userAccountSlice.reducer,
-        organisation: organisationSlice.reducer
+        organisation: organisationSlice.reducer,
+        userOrganisations: userOrganisationsSlice.reducer
     }
 })
 

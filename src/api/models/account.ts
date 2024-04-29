@@ -5,6 +5,7 @@ export interface Account {
     id: number;
     type: string;
     uid: string;
-    full_name: string;
+    full_name?: string;
     repository_settings?: RepositorySettings;
+    login?: string;
 }
