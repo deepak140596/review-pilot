@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
 import { Button } from "antd";
-import { RepositorySettings, defaultRepositorySettings } from "../../../api/models/repository";
+import { defaultRepositorySettings } from "../../../api/models/repository";
 import { ConfigureSettings } from "../../../components/configure-settings/configure-settings";
 import "./configure-organisation.scss";
 import { subscribeToUserAccount } from "../../../store/account-slice";
@@ -10,29 +10,31 @@ import { setOrganisationSettingsToDB } from "../../../api/services/firestore/fir
 import { uid } from "../../../context/auth-context";
 
 const ConfigureOrganisation = () => {
-    const { data: userAccount } = useSelector((state: RootState)=> state.userAccount);
+    const { data: activeAccount } = useSelector((state: RootState)=> state.activeAccount);
     const [ applyChangesButtonDisabled, setApplyChangesButtonDisabled ] = useState(true);
-    const [ repositorySettings, setRepositorySettings ] = useState(userAccount?.repository_settings ?? defaultRepositorySettings);
+    const [ repositorySettings, setRepositorySettings ] = useState(activeAccount?.repository_settings ?? defaultRepositorySettings);
 
     const dispatch = useDispatch();
 
+    // TODO: subscribe to active account instead of user account
     useEffect(() => {
         dispatch(subscribeToUserAccount())
-    }, [dispatch, userAccount])
+    }, [dispatch, activeAccount])
 
     const applyChanges = () => {
+        // TODO: save data wrt to active account
         setOrganisationSettingsToDB(uid(),"User",repositorySettings)
     }
 
     useEffect(() => {
         const checkForChanges = () => {
-            const hasChanges = JSON.stringify(userAccount?.repository_settings ?? defaultRepositorySettings) 
+            const hasChanges = JSON.stringify(activeAccount?.repository_settings ?? defaultRepositorySettings) 
                 !== JSON.stringify(repositorySettings);
             setApplyChangesButtonDisabled(!hasChanges);
         };
 
         checkForChanges();
-    }, [repositorySettings, userAccount]);
+    }, [repositorySettings, activeAccount]);
 
     const handleSwitchChange = (settingName: string, value: boolean) => {
         setRepositorySettings(prevSettings => ({

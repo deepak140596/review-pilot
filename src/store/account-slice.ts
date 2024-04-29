@@ -84,6 +84,8 @@ export const subscribeToUserOrganisations = createAsyncThunk(
     }
 );
 
+// TODO: subscribe to active account 
+
 export const organisationSlice = createSlice({
     name: "organisation",
     initialState: initialStateForOrganisation,

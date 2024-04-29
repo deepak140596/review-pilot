@@ -5,7 +5,7 @@ import { subscribeToRepository } from "../../../store/repositories-slice";
 import { RootState } from "../../../store/store";
 import { Button } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { RepositorySettings, defaultRepositorySettings } from "../../../api/models/repository";
+import { defaultRepositorySettings } from "../../../api/models/repository";
 import { setRepositorySettingsToDB } from "../../../api/services/firestore/firestore-setter";
 import { ConfigureSettings } from "../../../components/configure-settings/configure-settings";
 import "./configure-project.scss";
