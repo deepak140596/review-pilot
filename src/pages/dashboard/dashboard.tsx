@@ -17,9 +17,11 @@ import ConfigureProject from '../configure/project/configure-project';
 import ConfigureOrganisation from '../configure/organisation/configure-organisation';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { subscribeToUserOrganisations } from '../../store/account-slice';
+import { setActiveAccount, subscribeToUserAccount, subscribeToUserOrganisations } from '../../store/account-slice';
+import { Account } from '../../api/models/account';
 
 const { Header, Sider } = Layout;
+var isUserAccountSet = false;
 
 const Dashboard = () => {
   const { logout } = useAuth();
@@ -30,14 +32,20 @@ const Dashboard = () => {
   useEffect(() => {
     if (userAccount) {
       dispatch(subscribeToUserOrganisations(userAccount.id))
+      setUserAccount(userAccount);
     }
   },[dispatch, userAccount]);
 
   useEffect(() => {
-    if (userOrganisations) {
-      console.log(userOrganisations.length);
+    dispatch(subscribeToUserAccount())
+  }, [dispatch])
+
+  const setUserAccount = (userAccount: Account) => {
+    if (!isUserAccountSet) {
+      isUserAccountSet = true;
+      dispatch(setActiveAccount(userAccount));
     }
-  }, [userOrganisations]);
+  }
 
   const organisationsMenu = () => {
     if (!userOrganisations || !userAccount) return (<></>);
@@ -45,7 +53,15 @@ const Dashboard = () => {
       <div>
         <Menu mode="inline" 
           defaultSelectedKeys={[`${userAccount?.id}`]}
-          className='dashboard-sidebar-menu'>
+          className='dashboard-sidebar-menu'
+          onSelect={(item) => {
+            if (item.key === `${userAccount?.id}`) {
+              dispatch(setActiveAccount(userAccount));
+              return;
+            }
+            dispatch(setActiveAccount(userOrganisations.find((org) => `${org.id}` === item.key) as any));
+          }}
+          >
           <Menu.Item key={userAccount?.id}>
             {userAccount?.full_name}
           </Menu.Item>

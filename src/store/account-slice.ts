@@ -11,6 +11,8 @@ export const setUserAccount = createAction<Account>("account/setUserAccount");
 export const setUserAccountError = createAction<string | null>("account/setUserAccountError");
 export const setUserOrganisations = createAction<Account[]>("account/setUserOrganisations");
 export const setUserOrganisationsError = createAction<string | null>("account/setUserOrganisationsError");
+export const setActiveAccount = createAction<Account>("account/setActiveAccount");
+
 
 export const initialStateForOrganisation: DataState<Account> = {
     loading: false,
@@ -28,6 +30,12 @@ export const initialStateForUserOrganisations: DataState<Account[]> = {
     loading: false,
     error: null,
     data: []
+}
+
+export const initialStateForActiveAccount: DataState<Account> = {
+    loading: false,
+    error: null,
+    data: null
 }
 
 export const subscribeToOrganisation = createAsyncThunk(
@@ -123,6 +131,19 @@ export const userOrganisationsSlice = createSlice({
         builder.addCase(setUserOrganisationsError, (state: DataState<Account[]>, action: any) => {
             state.loading = false;
             state.error = action.error.message;
+        });
+    }
+});
+
+export const activeAccountSlice = createSlice({
+    name: "activeAccount",
+    initialState: initialStateForActiveAccount,
+    reducers: {},
+    extraReducers: (builder: any) => {
+        builder.addCase(setActiveAccount, (state: DataState<Account>, action: any) => {
+            state.loading = false;
+            state.error = null;
+            state.data = action.payload;
         });
     }
 });

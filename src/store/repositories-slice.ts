@@ -9,7 +9,6 @@ export const setErrorWhileGettingRepositories = createAction<string | null>("rep
 export const setRepository = createAction<Repository>("repositories/setRepository");
 export const setErrorWhileGettingRepository = createAction<string | null>("repositories/setErrorWhileGettingRepository");
 
-
 export const initialStateForRepositories: DataState<Repository[]> = {
     loading: false,
     error: null,
