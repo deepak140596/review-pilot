@@ -1,7 +1,3 @@
-.dashboard-layout {
-  min-height: 100vh;
-}
-
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -12,15 +8,32 @@
   }
 }
 
-.dashboard-sidebar {
-  background: #fff;
+.dashboard-content {
+  padding: 0 24px 24px;
+}
 
-  &__menu {
-    height: 100%;
-    border-right: 0;
+.dashboard-sidebar {
+  // display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #fff;
+  height: 100vh;
+
+  .dashboard-sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
+  }
+
+  .dashboard-sidebar-footer {
+    padding-top: 24px;
+    text-align: center;
+    border-top: 1px solid #f0f0f0;
   }
 }
 
-.dashboard-content {
-  padding: 0 24px 24px;
+.dashboard-sidebar-separator {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 0 24px;
 }

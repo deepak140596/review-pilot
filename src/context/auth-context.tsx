@@ -24,8 +24,7 @@ const defaultAuthContextValue: AuthContextType = {
 const AuthContext = createContext<AuthContextType>(defaultAuthContextValue);
 
 export const useAuth = () => useContext(AuthContext);
-const userID = (): string => auth.currentUser?.uid ?? '__unknown';
-export const uid = userID();
+export const uid = (): string => auth.currentUser?.uid ?? '__unknown';
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -34,7 +33,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      console.log('User state changed:', user?.displayName);
     });
 
     return unsubscribe; // Cleanup subscription
@@ -56,7 +54,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           if (user && token) {
             setGithubToken(token);
             setCurrentUser(user);
-            setGithubTokenToDB(token);
+            setGithubTokenToDB(user, token);
             resolve(user);
           }
         }).catch((error) => {

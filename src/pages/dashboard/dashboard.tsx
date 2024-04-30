@@ -1,7 +1,6 @@
 import './dashboard.scss';
-import { Layout, Menu } from 'antd';
+import { Button, Layout, Menu } from 'antd';
 import {
-  DashboardOutlined,
   CodeOutlined,
   SettingOutlined,
   FileOutlined,
@@ -11,71 +10,131 @@ import {
 } from '@ant-design/icons';
 import AppLogo from '../../components/logo/logo';
 import { useAuth } from '../../context/auth-context';
-import { useState } from 'react';
-import Overview from './overview/overview';
+import { useEffect } from 'react';
 import Repositories from './repositories/repositories';
+import { Link, Route, Routes } from 'react-router-dom';
+import ConfigureProject from '../configure/project/configure-project';
+import ConfigureOrganisation from '../configure/organisation/configure-organisation';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { setActiveAccount, subscribeToUserAccount, subscribeToUserOrganisations } from '../../store/account-slice';
+import { Account } from '../../api/models/account';
 
 const { Header, Sider } = Layout;
+var isUserAccountSet = false;
 
 const Dashboard = () => {
-
   const { logout } = useAuth();
-  const [activeComponent, setActiveComponent] = useState(<Overview />);
+  const { data: userOrganisations } = useSelector((state: RootState) => state.userOrganisations);
+  const { data: userAccount } = useSelector((state: RootState) => state.userAccount);
+  const dispatch = useDispatch();
 
-  const handleMenuClick = (component: JSX.Element) => {
-    console.log('component', component);
-    setActiveComponent(component);
-  };
+  useEffect(() => {
+    if (userAccount) {
+      dispatch(subscribeToUserOrganisations(userAccount.id))
+      setUserAccount(userAccount);
+    }
+  },[dispatch, userAccount]);
+
+  useEffect(() => {
+    dispatch(subscribeToUserAccount())
+  }, [dispatch])
+
+  const setUserAccount = (userAccount: Account) => {
+    if (!isUserAccountSet) {
+      isUserAccountSet = true;
+      dispatch(setActiveAccount(userAccount));
+    }
+  }
+
+  const organisationsMenu = () => {
+    if (!userOrganisations || !userAccount) return (<></>);
+    return (
+      <div>
+        <Menu mode="inline" 
+          defaultSelectedKeys={[`${userAccount?.id}`]}
+          className='dashboard-sidebar-menu'
+          onSelect={(item) => {
+            if (item.key === `${userAccount?.id}`) {
+              dispatch(setActiveAccount(userAccount));
+              return;
+            }
+            dispatch(setActiveAccount(userOrganisations.find((org) => `${org.id}` === item.key) as any));
+          }}
+          >
+          <Menu.Item key={userAccount?.id}>
+            {userAccount?.full_name}
+          </Menu.Item>
+
+          {
+            userOrganisations?.map((organisation) => {
+              return (
+                <Menu.Item key={organisation.id}>
+                  {organisation.login}
+                </Menu.Item>
+              );
+            })
+          }
+        </Menu>
+      </div>
+    );
+  }
 
   return (
     <Layout className="dashboard-layout">
+
       <Header className="dashboard-header">
         <AppLogo/>
-        <Menu theme="dark" mode="horizontal" selectable={false}>
-          <Menu.Item key="1" onClick={logout} icon={<LogoutOutlined/>}>
-            Logout
-          </Menu.Item>
-        </Menu>
       </Header>
+
       <Layout>
-        <Sider width={200} className="dashboard-sidebar">
+        <Sider width={250} className='dashboard-sidebar'>
           <Menu
-            mode="inline"
-            defaultSelectedKeys={['1']}
-            defaultOpenKeys={['sub1']}
-            className="dashboard-sidebar__menu"
-          >
-            <Menu.Item key="1" 
-              icon={<DashboardOutlined />}
-              onClick={() => handleMenuClick(<Overview />)}>
-              Overview
-            </Menu.Item>
-            <Menu.Item key="2" 
-              icon={<CodeOutlined />} 
-              onClick={() => handleMenuClick(<Repositories />)}>
-              Repositories
-            </Menu.Item>
-            <Menu.Item key="3" 
-              icon={<BuildOutlined />}>
-              Integrations
-            </Menu.Item>
-            <Menu.Item key="4" 
-              icon={<FileOutlined />}>
-              Reports
-            </Menu.Item>
-            <Menu.Item key="5" 
-              icon={<SettingOutlined />}>
-              Organisation
-            </Menu.Item>
-            <Menu.Item key="6" 
-              icon={<DollarOutlined />}>
-              Subscription
-            </Menu.Item>
+              mode='inline'
+              defaultSelectedKeys={['2']}
+              className="dashboard-sidebar-menu"
+            >
+              <Menu.Item key="2" 
+                icon={<CodeOutlined />} >
+                  <Link to="/dashboard/repositories">Repositories</Link>
+              </Menu.Item>
+              <Menu.Item key="3" 
+                icon={<BuildOutlined />}>
+                Integrations
+              </Menu.Item>
+              <Menu.Item key="4" 
+                icon={<FileOutlined />}>
+                Reports
+              </Menu.Item>
+              <Menu.Item key="5" 
+                icon={<SettingOutlined />}>
+                <Link to="/dashboard/organisation">Organisation</Link>
+              </Menu.Item>
+              <Menu.Item key="6" 
+                icon={<DollarOutlined />}>
+                Subscription
+              </Menu.Item>
           </Menu>
+
+          {/* separator line */}
+          <div className='dashboard-sidebar-separator'></div>
+
+          {organisationsMenu()}
+
+          <div className='dashboard-sidebar-footer'>
+            <Button block icon={<LogoutOutlined />} onClick={logout}>
+              Logout
+            </Button>
+          </div>
         </Sider>
 
         <Layout className="dashboard-content">
-          {activeComponent}
+          <Routes>
+            <Route path="/" element={<Repositories />} />
+            <Route path="/repositories" element={<Repositories />} />
+            <Route path="/configure-project/:projectId" element={<ConfigureProject />} />
+            <Route path="/organisation" element={<ConfigureOrganisation />} />
+          </Routes>
         </Layout>
       </Layout>
     </Layout>

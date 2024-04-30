@@ -1,0 +1,21 @@
+.reviewSettings {
+    &__header {
+        display: flex;
+        margin-bottom: 24px;
+        align-items: center;
+
+        .applyChangesButton {
+            margin-left: auto;
+        }
+    }
+
+    .backButton {
+        margin-right: 16px;
+        margin-top: 4px;
+        cursor: pointer;
+    }
+
+    .subtitleText {
+        margin-bottom: 16px;
+    }
+}

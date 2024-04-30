@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot, DocumentData, Timestamp, onSnapshot, FirestoreError } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot, DocumentData, Timestamp, onSnapshot, FirestoreError, query, Query, QueryConstraint } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
@@ -62,11 +62,36 @@ function convertTimestamps(obj: any): any {
         throw error;
       }
     }
+
+    static listenToDocument<T>(
+      documentPath: string,
+      onDocumentReceived: (document: T) => void,
+      onError?: (error: FirestoreError) => void
+    ): () => void  {
+      const docRef = doc(firestoreDB, documentPath);
+      const unsubscribe = onSnapshot(docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            onDocumentReceived(docToData<T>(docSnap));
+          } else {
+            console.error('Document does not exist!');
+          }
+        }, 
+        (error) => {
+          if (onError) {
+            onError(error);
+          } else {
+            console.error("Error listening to document:", error);
+          }
+        }
+      );
+    
+      // Return the unsubscribe function so the caller can stop listening when needed
+      return unsubscribe;
+    }
   
-    // Read all documents from a collection and return them as a list of the specified type
     static async getAllDocuments<T>(collectionPath: string): Promise<T[]> {
       try {
-        console.log('collectionPath', collectionPath);
         const querySnapshot = await getDocs(collection(firestoreDB, collectionPath));
         let documents: T[] = [];
         querySnapshot.forEach((doc) => {
@@ -103,6 +128,35 @@ function convertTimestamps(obj: any): any {
       // Return the unsubscribe function so the caller can stop listening when needed
       return unsubscribe;
     }
+
+    // Get query snapshot listener for a collection
+    static listenToQueryCollection<T>(
+      collectionPath: string,
+      onCollectionUpdate: (documents: T[]) => void,
+      onError?: (error: FirestoreError) => void,
+      ...queryConstraints: QueryConstraint[]
+    ): () => void {
+      const queryCollection = query(collection(firestoreDB, collectionPath), ...queryConstraints);
+      const unsubscribe = onSnapshot(queryCollection,
+        (querySnapshot) => {
+          let documents: T[] = [];
+          querySnapshot.forEach((doc) => {
+            documents.push(docToData<T>(doc));
+          });
+          onCollectionUpdate(documents);
+        }, 
+        (error) => {
+          if (onError) {
+            onError(error);
+          } else {
+            console.error("Error listening to collection:", error);
+          }
+        }
+      );
+    
+      // Return the unsubscribe function so the caller can stop listening when needed
+      return unsubscribe;
+    }
   
     // Write a new document to a collection and return the document as the specified type
     static async addDocument<T extends { [x: string]: any; }>(collectionPath: string, data: T): Promise<T> {
@@ -117,8 +171,6 @@ function convertTimestamps(obj: any): any {
     // Update an existing document and return the updated document as the specified type
     static async updateDocument(collectionPath: string, docId: string, fieldsToUpdate: Record<string, any>): Promise<void> {
       try {
-        console.log('collectionPath', collectionPath);
-        console.log('docId', docId);
         const docRef = doc(firestoreDB, `${collectionPath}/${docId}`);
         await setDoc(docRef, fieldsToUpdate, { merge: true });
       } catch (error) {
