@@ -3,6 +3,10 @@ import { Card, Col, Row, Button } from 'antd';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { Product } from '../../../api/models/stripe';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { createStripeSession } from '../../../api/services/http/create-stripe-session';
+
 
 export const Subscription = () => {
 
@@ -13,8 +17,10 @@ export const Subscription = () => {
         setSelectedProduct(product);
     };
     
-    const handleSubscribe = () => {
-        
+    const handleSubscribe = async () => {
+        if (!selectedProduct) return;
+        const sessionId = await createStripeSession(selectedProduct);
+        console.log(`Stripe session id: ${sessionId}`)
     };
 
     const plan = (product: Product) => {
