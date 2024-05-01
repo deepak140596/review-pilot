@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Card, Col, Row, Button } from 'antd';
-import {useSelector } from 'react-redux';
+import {useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { Product } from '../../../api/models/stripe';
-import { loadStripe } from '@stripe/stripe-js';
-import { createStripeSession } from '../../../api/services/http/create-stripe-session';
 import { LoadingOutlined } from '@ant-design/icons';
+import { createStripeCheckoutSession } from '../../../store/stripe-slice';
 
 
 export const Subscription = () => {
@@ -13,6 +12,7 @@ export const Subscription = () => {
     const [selectedProduct, setSelectedProduct] = useState<Product>();
     const { data: stripeConfig } = useSelector((state: RootState) => state.stripeConfig);
     const [loading, setLoading] = useState(false);
+    const dispatch = useDispatch();
 
     const handleSelectPlan = (product: Product) => {
         setSelectedProduct(product);
@@ -20,17 +20,14 @@ export const Subscription = () => {
     
     const handleSubscribe = async () => {
         if (!selectedProduct) return;
-        if (!stripeConfig) return;
         setLoading(true);
-        const sessionId: string = (await createStripeSession(selectedProduct)).sessionId;
-        setLoading(false);  
-        
-        const stripe = await loadStripe(stripeConfig.publishable_key);
-        stripe?.redirectToCheckout({ sessionId })?.then((result: any) => {
-            if (result.error) {
-                console.error(`Stripe checkout error: ${result.error.message}`);
-            }
-        });
+        dispatch(
+            createStripeCheckoutSession({
+                priceId: selectedProduct.price_id,
+                successUrl: 'http://localhost:3001/dashboard/subscription',
+                cancelUrl: 'http://localhost:3001/dashboard/repositories'
+            })
+        )
     };
 
     const plan = (product: Product) => {
