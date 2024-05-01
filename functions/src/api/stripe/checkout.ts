@@ -1,12 +1,18 @@
 import * as functions from 'firebase-functions';
 import * as express from 'express';
 import * as admin from "firebase-admin";
+import * as cors from 'cors';
 
 try {
     admin.initializeApp();
 } catch{}
 
 const app = express();
+app.use(cors({ origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://pr-review-bot.web.app'
+] }));
 
 app.post('/', async (req, res) => {
     const { product, successUrl, cancelUrl  } = req.body;
@@ -23,6 +29,7 @@ app.post('/', async (req, res) => {
                     quantity: 1,
                 },
             ],
+            billing_address_collection: 'required',
             success_url: successUrl,
             cancel_url: cancelUrl,
         });

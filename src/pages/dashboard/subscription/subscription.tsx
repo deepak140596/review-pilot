@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { Card, Col, Row, Button } from 'antd';
-import { useSelector } from 'react-redux';
+import {useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { Product } from '../../../api/models/stripe';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { createStripeSession } from '../../../api/services/http/create-stripe-session';
+import { LoadingOutlined } from '@ant-design/icons';
 
 
 export const Subscription = () => {
 
     const [selectedProduct, setSelectedProduct] = useState<Product>();
     const { data: stripeConfig } = useSelector((state: RootState) => state.stripeConfig);
+    const [loading, setLoading] = useState(false);
 
     const handleSelectPlan = (product: Product) => {
         setSelectedProduct(product);
@@ -19,8 +20,17 @@ export const Subscription = () => {
     
     const handleSubscribe = async () => {
         if (!selectedProduct) return;
-        const sessionId = await createStripeSession(selectedProduct);
-        console.log(`Stripe session id: ${sessionId}`)
+        if (!stripeConfig) return;
+        setLoading(true);
+        const sessionId: string = (await createStripeSession(selectedProduct)).sessionId;
+        setLoading(false);  
+        
+        const stripe = await loadStripe(stripeConfig.publishable_key);
+        stripe?.redirectToCheckout({ sessionId })?.then((result: any) => {
+            if (result.error) {
+                console.error(`Stripe checkout error: ${result.error.message}`);
+            }
+        });
     };
 
     const plan = (product: Product) => {
@@ -44,17 +54,25 @@ export const Subscription = () => {
 
     return (
         <div style={{  padding: '30px' }}>
-            <Row gutter={16}>
-                <Col span={12}>
-                    {stripeConfig && plan(stripeConfig.products.monthly)}
-                </Col>
-                <Col span={12}>
-                    {stripeConfig && plan(stripeConfig.products.yearly)}
-                </Col>
-                <Button type="primary" block style={{ marginTop: '20px' }} onClick={handleSubscribe} disabled={!selectedProduct}>
-                    Subscribe
-                </Button>
-            </Row>
+            <Col span={24}>
+                <Row gutter={16} align="middle">
+                    <Col span={12}>
+                        {stripeConfig && plan(stripeConfig.products.monthly)}
+                    </Col>
+                    <Col span={12}>
+                        {stripeConfig && plan(stripeConfig.products.yearly)}
+                    </Col>  
+                </Row>
+                { loading ? 
+                    <Row justify="center">
+                        <LoadingOutlined style={{ fontSize: '50px', color: 'blue', marginTop: '20px' }} /> 
+                    </Row>
+                    : 
+                    <Button type="primary" block style={{ marginTop: '20px' }} onClick={handleSubscribe} disabled={!selectedProduct}>
+                        Subscribe
+                    </Button>
+                    }
+            </Col>
         </div>
     );
 }

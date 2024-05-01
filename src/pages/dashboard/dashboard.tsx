@@ -20,20 +20,15 @@ import { RootState } from '../../store/store';
 import { setActiveAccount, subscribeToUserAccount, subscribeToUserOrganisations } from '../../store/account-slice';
 import { Account } from '../../api/models/account';
 import { getStripeConfig } from '../../store/stripe-slice';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
 import { Subscription } from './subscription/subscription';
 
 const { Header, Sider } = Layout;
 var isUserAccountSet = false;
-var stripePromise: any = null;
-var stripeOptions: any = null;
 
 const Dashboard = () => {
   const { logout } = useAuth();
   const { data: userOrganisations } = useSelector((state: RootState) => state.userOrganisations);
   const { data: userAccount } = useSelector((state: RootState) => state.userAccount);
-  const { data: stripeConfig } = useSelector((state: RootState) => state.stripeConfig);
 
   const dispatch = useDispatch();
 
@@ -47,17 +42,7 @@ const Dashboard = () => {
   useEffect(() => {
     dispatch(subscribeToUserAccount())
     dispatch(getStripeConfig())
-
   }, [dispatch])
-
-  useEffect(() => {
-    if (stripeConfig) {
-      stripeOptions = {
-        apiKey: stripeConfig.publishable_key,
-      };
-      stripePromise = loadStripe(stripeConfig.publishable_key);
-    }
-  });
 
   const setUserAccount = (userAccount: Account) => {
     if (!isUserAccountSet) {
@@ -100,8 +85,7 @@ const Dashboard = () => {
   }
 
   return (
-    <Elements stripe={stripePromise} options={stripeOptions}>
-      <Layout className="dashboard-layout">
+    <Layout className="dashboard-layout">
 
       <Header className="dashboard-header">
         <AppLogo/>
@@ -159,8 +143,6 @@ const Dashboard = () => {
         </Layout>
       </Layout>
       </Layout>
-    </Elements>
-    
   );
 };
 
