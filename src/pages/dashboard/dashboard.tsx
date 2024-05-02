@@ -8,7 +8,6 @@ import {
   DollarOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
-import AppLogo from '../../components/logo/logo';
 import { useAuth } from '../../context/auth-context';
 import { useEffect } from 'react';
 import Repositories from './repositories/repositories';
@@ -22,7 +21,7 @@ import { Account } from '../../api/models/account';
 import { getStripeConfig } from '../../store/stripe-slice';
 import { Subscription } from './subscription/subscription';
 
-const { Header, Sider } = Layout;
+const { Sider } = Layout;
 var isUserAccountSet = false;
 
 const Dashboard = () => {
@@ -86,12 +85,6 @@ const Dashboard = () => {
 
   return (
     <Layout className="dashboard-layout">
-
-      <Header className="dashboard-header">
-        <AppLogo/>
-      </Header>
-
-      <Layout>
         <Sider width={250} className='dashboard-sidebar'>
           <Menu
               mode='inline'
@@ -120,7 +113,6 @@ const Dashboard = () => {
               </Menu.Item>
           </Menu>
 
-          {/* separator line */}
           <div className='dashboard-sidebar-separator'></div>
 
           {organisationsMenu()}
@@ -141,7 +133,6 @@ const Dashboard = () => {
             <Route path="/subscription" element={<Subscription/>} />
           </Routes>
         </Layout>
-      </Layout>
       </Layout>
   );
 };
