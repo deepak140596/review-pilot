@@ -13,6 +13,9 @@ import AppLogo from './components/logo/logo';
 import './App.scss';
 import { Footer } from './components/footer/footer';
 import { RefundAndCancellation } from './pages/company/refund-and-cancellation';
+import { AboutUs } from './pages/company/about-us';
+import { ContactUs } from './pages/company/contact-us';
+import { Docs } from './pages/docs/docs';
 
 
 function App() {
@@ -36,9 +39,12 @@ function App() {
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/about-us" element={<AboutUs/>} />
+            <Route path="/contact-us" element={<ContactUs/>} />
             <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
             <Route path="/terms-of-service" element={<TermsOfService/>} />
             <Route path="/refund" element={<RefundAndCancellation/>}/>
+            <Route path="/docs" element={<Docs/>} />
             <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           </Routes>
 

@@ -16,7 +16,7 @@ Welcome to ReviewPilot! These Terms of Service ("Terms") govern your use of our 
 ## Definitions
 - **"Service"**: ReviewPilot software and associated services.
 - **"User" or "You"**: Any individual or entity using ReviewPilot.
-- **"We", "Us", or "Our"**: ReviewPilot and its owners, operators, and affiliates.
+- **"We", "Us", or "Our"**: **Deepak Prasad**, the sole proprietor of ReviewPilot.
 
 ## Acceptance of Terms
 By accessing or using ReviewPilot, you accept and agree to these Terms. If you do not agree, you may not use the Service.
@@ -93,13 +93,13 @@ If a dispute cannot be resolved through negotiation, it will be settled by bindi
 ## Miscellaneous
 
 ### Entire Agreement
-These Terms, along with the Privacy Policy, constitute the entire agreement between you and us regarding the use of the Service.
+These Terms, along with the Privacy Policy, constitute the entire agreement between you and Deepak Prasad regarding the use of the Service.
 
 ### Severability
 If any provision of these Terms is found to be invalid, the remaining provisions will continue in full force and effect.
 
 ### Waiver
-No waiver of any term or condition will be valid unless in writing and signed by us.
+No waiver of any term or condition will be valid unless in writing and signed by Deepak Prasad.
 
 ## Contact Information
 For any questions or concerns regarding these Terms, please contact us at:
