@@ -1,7 +1,14 @@
 import { Octokit } from "octokit";
 import * as express from 'express';
-import { getLLMResponse } from "../ai/prompts/review-prompt";
+import { getLLMResponse } from "../../ai/prompts/review-prompt";
 import axios from "axios";
+import * as admin from "firebase-admin";
+import { RepositorySettings } from "../../../models/repository-settings";
+
+try {
+    admin.initializeApp();
+} catch{}
+const db = admin.firestore();
 
 export async function reviewPR(req: express.Request, octokit: Octokit, token: string) {
     const prNumber = req.body.pull_request.number as number;
@@ -11,23 +18,113 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
 
     console.log(`owner: ${owner} repo: ${repoName} prNumber: ${prNumber}`);
 
-    await deletePendingReview(owner, repoName, prNumber, octokit);
-    const diffText = await getDiff(pullUrl, token);
-    const comments = await getCommmentsFromLLm(diffText);
-    console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
+    const repositorySettings = await getRepositorySettings(req.body)
+    // const generateHighLevelSummary = repositorySettings?.high_level_summary;
 
-    const review = await octokit.rest.pulls.createReview({
-        owner: owner,
-        repo: repoName,
-        pull_number: prNumber,
-        body: 'Here are some suggestions for your PR:\n\n',
-        event: 'COMMENT',
-        comments: comments
-    });
+    if (repositorySettings) {
+        const shouldReviewPR = await matchPRConditions(req.body, repositorySettings)
+        console.log(`Should Review PR: ${shouldReviewPR}`)
 
-    return review;
+        if (shouldReviewPR) {
+            
+            await deletePendingReview(owner, repoName, prNumber, octokit);
+            const diffText = await getDiff(pullUrl, token);
+            const comments = await getCommmentsFromLLm(diffText);
+            console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
+        
+            const review = await octokit.rest.pulls.createReview({
+                owner: owner,
+                repo: repoName,
+                pull_number: prNumber,
+                body: 'Here are some suggestions for your PR:\n\n',
+                event: 'COMMENT',
+                comments: comments
+            });
+        
+            return review;
+        }
+    }
+
+    return {message: "PR not reviewed"}
 }
 
+async function matchPRConditions(payload: any, repoSettings: RepositorySettings): Promise<boolean> {
+
+    if (repoSettings === null) {
+        return true
+    }
+    
+    if (!repoSettings.automated_reviews) {
+        const action = payload.action;
+        if (action !== 'opened') {
+            return false
+        }
+    }
+
+    const isDraftRepo = payload.pull_request.draft as boolean;
+    if (!repoSettings.draft_pull_request_reviews && isDraftRepo) {
+        return false
+    }
+
+    const labels = labelsToCommaSeparatedString(payload.pull_request.labels);
+    const titleAndLabels = `${payload.pull_request.title} ${labels}`
+    const ignoreKeywords = repoSettings.ignore_title_keywords.split(',').map(keyword => keyword.trim().toLowerCase());
+    for (const keyword of ignoreKeywords) {
+        if (keyword && titleAndLabels.toLowerCase().includes(keyword)) {
+            return false;
+        }
+    }
+
+    const branchName = payload.pull_request.head.ref;
+    const targetBranches = repoSettings.target_branches.split(',').map(branch => branch.trim());
+    for (const targetBranch of targetBranches) {
+        const regex = new RegExp(`^${targetBranch.replace('*', '.*')}$`);
+        if (regex.test(branchName)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+async function getRepositorySettings(payload: any): Promise<RepositorySettings | null> {
+
+    const repoId = payload.repository.id;
+
+    const repoData = (await db.collection('repositories').doc(`${repoId}`).get()).data()
+    if (repoData === undefined || repoData === null) {
+        return null
+    }
+    var repoSettings = repoData['repository_settings'] as RepositorySettings;
+
+    if (repoSettings === undefined || repoSettings === null) {
+        const ownerType = payload.repository.owner.type;
+
+        if (ownerType === 'Organization') {
+            const ownerLogin = payload.repository.owner.login;
+            const orgAccount = (await db.collection('organisations').doc(`${ownerLogin}`).get()).data();
+            if (orgAccount === undefined || orgAccount === null) {
+                return null
+            }
+            repoSettings = orgAccount['repository_settings'] as RepositorySettings
+
+        } else {
+            const ownerId = payload.repository.owner.id;
+            try {
+                const userAccount = (await db.collection('users').where('id', '==', ownerId).limit(1).get()).docs[0]
+                if (userAccount === undefined || userAccount === null) {
+                    return null
+                }
+                repoSettings = userAccount.data()['repository_settings'] as RepositorySettings
+            } catch (error) {
+                return null
+            }
+        }        
+    }
+
+    console.log(`Repo settings: ${JSON.stringify(repoSettings)}`)
+    return repoSettings
+}
 
 async function getDiff(pullUrl: string, token: string): Promise<string> {
     const response = await axios.get(pullUrl, {
@@ -169,4 +266,8 @@ function splitIntoGroups(fileSections: string[][], numberOfGroups : number): str
        splitGroups.push(joinedFile)
     })
     return splitGroups;
+}
+
+function labelsToCommaSeparatedString(labels: { name: string }[]): string {
+    return labels.map(label => label.name).join(', ');
 }
