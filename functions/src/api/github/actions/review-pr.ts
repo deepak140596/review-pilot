@@ -75,6 +75,12 @@ async function matchPRConditions(payload: any, repoSettings: RepositorySettings)
         }
     }
 
+    
+    if (repoSettings.target_branches === undefined 
+        || repoSettings.target_branches === null 
+        || repoSettings.target_branches === '') {
+        return true;
+    }
     const branchName = payload.pull_request.head.ref;
     const targetBranches = repoSettings.target_branches.split(',').map(branch => branch.trim());
     for (const targetBranch of targetBranches) {
