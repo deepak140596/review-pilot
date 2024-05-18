@@ -16,6 +16,7 @@ import { RefundAndCancellation } from './pages/company/refund-and-cancellation';
 import { AboutUs } from './pages/company/about-us';
 import { ContactUs } from './pages/company/contact-us';
 import { Docs } from './pages/docs/docs';
+import { Shipping } from './pages/company/shipping';
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
             <Route path="/terms-of-service" element={<TermsOfService/>} />
             <Route path="/refund" element={<RefundAndCancellation/>}/>
+            <Route path="/shipping" element={<Shipping/>}/>
             <Route path="/docs" element={<Docs/>} />
             <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           </Routes>

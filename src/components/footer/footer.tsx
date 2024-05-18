@@ -37,6 +37,11 @@ export const Footer = () => {
                         Contact Us
                     </div>
                 </Link>
+                <Link to='/shipping'>
+                    <div className='items'>
+                        Shipping
+                    </div>
+                </Link>
             </Col>
   
             <Col span={6}>
