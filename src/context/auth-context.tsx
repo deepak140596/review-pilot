@@ -1,4 +1,4 @@
-import { GithubAuthProvider, User, onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { GithubAuthProvider, User, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../api/services/firestore/firestore-service";
 import { setGithubTokenToDB } from "../api/services/firestore/firestore-setter";
@@ -11,6 +11,7 @@ interface AuthContextType {
     currentUser: User | null;
     githubToken: string | undefined;
     loginWithGitHub: () => Promise<User | void>;
+    loginWithEmailPassword: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
 }
   
@@ -18,6 +19,7 @@ const defaultAuthContextValue: AuthContextType = {
     currentUser: null,
     githubToken: undefined,
     loginWithGitHub: () => Promise.reject("Not implemented"),
+    loginWithEmailPassword: () => Promise.reject("Not implemented"),
     logout: () => Promise.reject("Not implemented"),
 };
 
@@ -64,6 +66,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
   };
 
+  const loginWithEmailPassword = async (email: string, password: string) => {
+    const user = await signInWithEmailAndPassword(auth, email, password);
+    setCurrentUser(user.user);
+  }
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -78,6 +85,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     currentUser,
     githubToken,
     loginWithGitHub,
+    loginWithEmailPassword,
     logout
   };
 

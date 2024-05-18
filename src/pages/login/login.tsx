@@ -1,15 +1,17 @@
 import './login.scss';
-import { Button, Card, Layout } from 'antd';
+import { Button, Card, Input, Layout } from 'antd';
 import { GithubOutlined } from '@ant-design/icons';
 import { Content } from 'antd/es/layout/layout';
 import {useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth-context';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const Login = () => {
 
   const navigate = useNavigate();
-  const { loginWithGitHub, currentUser } = useAuth();
+  const { loginWithGitHub, loginWithEmailPassword, currentUser } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (currentUser) {
@@ -25,9 +27,34 @@ const Login = () => {
     });
   }
 
+  const handleEmailLogin = async () => {
+    console.log('Email:', email, 'Password:', password);
+    await loginWithEmailPassword(email, password);
+  }
+
+  const emailLogin = () => {
+    return (
+      <Card className="login-card">
+        <p className="login-intro">
+          You will be authenticated through Email.
+        </p>
+        
+        <Input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+        <Input.Password placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+
+        <Button
+          type="primary"
+          onClick={handleEmailLogin}>
+          Login with Email
+          </Button>
+      </Card>
+    )
+  }
+
   return (
     <Layout className="layout">
       <Content className="login-container">
+      {emailLogin()}
         <Card className="login-card">
           <p className="login-intro">
             You will be authenticated through GitHub.
