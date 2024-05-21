@@ -1,3 +1,4 @@
+import { Plan } from "./plan";
 
 export interface StripeConfig {
     publishable_key: string;
@@ -16,8 +17,3 @@ export interface Product {
     plan: Plan;
 }
 
-export interface Plan {
-    price: string;
-    title: string;
-    features: string[];
-}
