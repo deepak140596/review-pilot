@@ -3,6 +3,7 @@ import {repositorySlice, repositoriesSlice} from "./repositories-slice";
 import { activeAccountSlice, organisationSlice, userAccountSlice, userOrganisationsSlice } from "./account-slice";
 import { stripeConfigSlice, checkoutUrlSlice } from "./stripe-slice";
 import { plansSlice } from "./plan-slice";
+import { razorpayCredentialsSlice } from "./razorpay-slice";
 
 export interface DataState<T> {
     loading: boolean;
@@ -20,7 +21,8 @@ export const store = configureStore({
         activeAccount: activeAccountSlice.reducer,
         stripeConfig: stripeConfigSlice.reducer,
         checkoutUrlStripe: checkoutUrlSlice.reducer,
-        plans: plansSlice.reducer
+        plans: plansSlice.reducer,
+        razorpayCredentials: razorpayCredentialsSlice.reducer
     }
 })
 

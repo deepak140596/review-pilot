@@ -35,3 +35,9 @@ export function setOrganisationSettingsToDB(
         repository_settings: settings
     });
 }
+
+export function setPaymentInProgressInDB() {
+    FirestoreService.updateDocument('users', uid(), {
+        payment_in_progress: true
+    });
+}
