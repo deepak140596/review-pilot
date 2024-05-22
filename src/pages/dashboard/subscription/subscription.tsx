@@ -11,6 +11,7 @@ import { getRazorpayCredentials } from '../../../store/razorpay-slice';
 import { setPaymentInProgressInDB } from '../../../api/services/firestore/firestore-setter';
 
 // TODO: when subscription is active show details of subs
+// TODO: implement trial period
 export const Subscription = () => {
     const [selectedPlan, setSelectedPlan] = useState<Plan>();
     const { data: plans } = useSelector((state: RootState) => state.plans);

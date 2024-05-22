@@ -10,6 +10,7 @@ try {
 } catch{}
 const db = admin.firestore();
 
+// TODO: check pro status and review
 export async function reviewPR(req: express.Request, octokit: Octokit, token: string) {
     const prNumber = req.body.pull_request.number as number;
     const repoName = req.body.repository.name as string;
