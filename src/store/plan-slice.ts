@@ -4,7 +4,7 @@ import { FirestoreService } from "../api/services/firestore/firestore-service";
 import { DataState } from "./store";
 
 
-export const initialStateForPlans: DataState<Plans> = {
+const initialStateForPlans: DataState<Plans> = {
     loading: false,
     error: null,
     data: null

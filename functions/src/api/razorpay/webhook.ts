@@ -1,12 +1,17 @@
 import * as functions from 'firebase-functions';
 import * as express from 'express';
 import * as admin from 'firebase-admin';
+import * as cors from 'cors';
+const Razorpay = require('razorpay');
+
 
 try {
     admin.initializeApp();
 } catch {}
 const db = admin.firestore();
 const app = express();
+app.use(cors({ origin: true }));
+
 
 app.post('/', async (req, res) => {
     const body = req.body;
@@ -55,9 +60,22 @@ async function handleSusbscription(payload: any, proState: boolean ) {
     const subscription = payload.subscription.entity;
     const userId = subscription.notes.userId;
 
+    const subscriptionId = subscription.id;
+    const planId = subscription.plan_id;
+    const razorpayData = (await admin.firestore().doc('admin/razorpay_test').get()).data();
+    const razorpay = new Razorpay({
+        key_id: razorpayData?.key_id,
+        key_secret: razorpayData?.key_secret
+    });
+    const plan = await razorpay.plans.fetch(planId);
+
     console.log(`User ID: ${userId}`);
     db.runTransaction(async (transaction) => {
         const user = (await transaction.get(db.doc(`users/${userId}`))).data();
+        transaction.set(
+            db.doc(`users/${userId}/subscriptions/${subscriptionId}`), 
+            { plan, subscription, active: proState }
+        );
         if (!user) return;
         const organisations = user.organisations as string[];
         transaction.update(db.doc(`users/${userId}`), { pro: proState });

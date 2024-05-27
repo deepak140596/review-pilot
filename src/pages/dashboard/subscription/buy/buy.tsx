@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Card, Col, Row, Button } from 'antd';
 import {useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../store/store';
+import { RootState } from '../../../../store/store';
 import { LoadingOutlined } from '@ant-design/icons';
-import { Plan } from '../../../api/models/plan';
-import { uid } from '../../../context/auth-context';
-import { getPlans } from '../../../store/plan-slice';
-import { createRazorpaySubscription } from '../../../api/services/http/create-razorpay-subscription';
-import { getRazorpayCredentials } from '../../../store/razorpay-slice';
-import { setPaymentInProgressInDB } from '../../../api/services/firestore/firestore-setter';
+import { Plan } from '../../../../api/models/plan';
+import { uid } from '../../../../context/auth-context';
+import { getPlans } from '../../../../store/plan-slice';
+import { createRazorpaySubscription } from '../../../../api/services/http/create-razorpay-subscription';
+import { getRazorpayCredentials } from '../../../../store/razorpay-slice';
+import { setPaymentInProgressInDB } from '../../../../api/services/firestore/firestore-setter';
 
-// TODO: when subscription is active show details of subs
-// TODO: implement trial period
-export const Subscription = () => {
+
+export const BuySubscription = () => {
     const [selectedPlan, setSelectedPlan] = useState<Plan>();
     const { data: plans } = useSelector((state: RootState) => state.plans);
     const { data: razorpayCredentials } = useSelector((state: RootState) => state.razorpayCredentials);
@@ -99,16 +98,7 @@ export const Subscription = () => {
             </Card>
         )
     }
-
-    const subscriptionDetails = () => {
-        return (
-            <Card title="Subscription Details" bordered={true}>
-                <Col span={24}>
-                    <h1 style={{ minHeight: '50px', marginBottom: '20px' }}>Subscription Active</h1>
-                </Col>
-            </Card>
-        )
-    }
+    
 
     const plan = (plan: Plan) => {
         return (
@@ -155,8 +145,7 @@ export const Subscription = () => {
 
     return (
         <div style={{  padding: '30px' }}>
-            { (userAccount?.pro) ? subscriptionDetails() :  
-            (userAccount?.payment_in_progress ?? false) ? paymentInProgress() : plansView() }
+            { (userAccount?.payment_in_progress ?? false) ? paymentInProgress() : plansView() }
         </div>
     );
 }
