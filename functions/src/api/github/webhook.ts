@@ -19,7 +19,7 @@ app.post('/', async (req, res) => {
     case 'pull_request':
       if (action == "opened" || action == "reopened") {
         response = await reviewPR(req, octokit, token);
-      }
+      }git
       break;
     case 'issue_comment':
       if (action == 'created') {

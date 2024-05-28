@@ -22,31 +22,35 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
     const repositorySettings = await getRepositorySettings(req.body)
     // const generateHighLevelSummary = repositorySettings?.high_level_summary;
 
-    if (repositorySettings) {
-        const shouldReviewPR = await matchPRConditions(req.body, repositorySettings)
-        console.log(`Should Review PR: ${shouldReviewPR}`)
+    const isPro = await isOwnerPro(req.body);
 
-        if (shouldReviewPR) {
+    if (!isPro) {
+        console.log('User is not pro');
+        return {message: "User is not pro"}
+    } else {
+        if (repositorySettings) {
+            const shouldReviewPR = await matchPRConditions(req.body, repositorySettings)
+            console.log(`Should Review PR: ${shouldReviewPR}`)
+            if (shouldReviewPR) {
+                await deletePendingReview(owner, repoName, prNumber, octokit);
+                const diffText = await getDiff(pullUrl, token);
+                const comments = await getCommmentsFromLLm(diffText);
+                console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
             
-            await deletePendingReview(owner, repoName, prNumber, octokit);
-            const diffText = await getDiff(pullUrl, token);
-            const comments = await getCommmentsFromLLm(diffText);
-            console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
-        
-            const review = await octokit.rest.pulls.createReview({
-                owner: owner,
-                repo: repoName,
-                pull_number: prNumber,
-                body: 'Here are some suggestions for your PR:\n\n',
-                event: 'COMMENT',
-                comments: comments
-            });
-        
-            return review;
+                const review = await octokit.rest.pulls.createReview({
+                    owner: owner,
+                    repo: repoName,
+                    pull_number: prNumber,
+                    body: 'Here are some suggestions for your PR:\n\n',
+                    event: 'COMMENT',
+                    comments: comments
+                });
+                return review;
+            }
         }
-    }
 
-    return {message: "PR not reviewed"}
+        return {message: "PR not reviewed"}
+    }
 }
 
 async function matchPRConditions(payload: any, repoSettings: RepositorySettings): Promise<boolean> {
@@ -92,6 +96,31 @@ async function matchPRConditions(payload: any, repoSettings: RepositorySettings)
     }
 
     return false;
+}
+
+async function isOwnerPro(payload: any) : Promise<boolean> {
+    const ownerType = payload.repository.owner.type;
+    var isPro = false;
+    if (ownerType === 'Organization') {
+        const ownerLogin = payload.repository.owner.login;
+        const orgAccount = (await db.collection('organisations').doc(`${ownerLogin}`).get()).data();
+        if (orgAccount === undefined || orgAccount === null) {
+            return false
+        }
+        isPro = orgAccount['pro'] as boolean;
+    } else {
+        const ownerId = payload.repository.owner.id;
+        try {
+            const userAccount = (await db.collection('users').where('id', '==', ownerId).limit(1).get()).docs[0]
+            if (userAccount === undefined || userAccount === null) {
+                return false
+            }
+            isPro = userAccount.data()['pro'] as boolean;
+        } catch (error) {
+            return false
+        }
+    }
+    return isPro;
 }
 
 async function getRepositorySettings(payload: any): Promise<RepositorySettings | null> {
@@ -207,6 +236,66 @@ function filterDiff(diffContent: string) {
         /^diff --git a\/.*\.html b\/.*\.html$/, // HTML files
         // /^diff --git a\/.*\.scss b\/.*\.scss$/, // SCSS files
         // /^diff --git a\/.*\.css b\/.*\.css$/  // CSS files
+
+        // Android files
+        /^diff --git a\/.*\.java b\/.*\.java$/, // Java files
+        /^diff --git a\/.*\.kt b\/.*\.kt$/, // Kotlin files
+        /^diff --git a\/.*\.xml b\/.*\.xml$/, // XML files
+        /^diff --git a\/.*\.gradle b\/.*\.gradle$/, // Gradle files
+
+        // IOS files
+        /^diff --git a\/.*\.swift b\/.*\.swift$/, // Swift files
+        /^diff --git a\/.*\.m b\/.*\.m$/, // Objective-C files
+        /^diff --git a\/.*\.plist b\/.*\.plist$/, // Plist files
+        /^diff --git a\/.*\.storyboard b\/.*\.storyboard$/, // Storyboard files
+
+        // Flutter files
+        /^diff --git a\/.*\.dart b\/.*\.dart$/, // Dart files
+        /^diff --git a\/.*\.json b\/.*\.json$/, // JSON files
+
+        // Python files
+        /^diff --git a\/.*\.py b\/.*\.py$/, // Python files
+
+        // Ruby files
+        /^diff --git a\/.*\.rb b\/.*\.rb$/, // Ruby files
+
+        // Go files
+        /^diff --git a\/.*\.go b\/.*\.go$/, // Go files
+
+        // PHP files
+        /^diff --git a\/.*\.php b\/.*\.php$/, // PHP files
+
+        // C# files
+        /^diff --git a\/.*\.cs b\/.*\.cs$/, // C# files
+
+        // C++ files
+        /^diff --git a\/.*\.cpp b\/.*\.cpp$/, // C++ files
+
+        // C files
+        /^diff --git a\/.*\.c b\/.*\.c$/, // C files
+
+        // Rust files
+        /^diff --git a\/.*\.rs b\/.*\.rs$/, // Rust files
+
+        // Shell files
+        /^diff --git a\/.*\.sh b\/.*\.sh$/, // Shell files
+
+        // SQL files
+        /^diff --git a\/.*\.sql b\/.*\.sql$/, // SQL files
+
+        // Docker files
+        /^diff --git a\/.*\.dockerfile b\/.*\.dockerfile$/, // Docker files
+
+        // YAML files
+        /^diff --git a\/.*\.yml b\/.*\.yml$/, // YAML files
+
+        // Terraform files
+        /^diff --git a\/.*\.tf b\/.*\.tf$/, // Terraform files
+
+        // Markdown files
+        /^diff --git a\/.*\.md b\/.*\.md$/, // Markdown files
+
+
     ];
 
     // Filter lines, retaining only blocks that match the code file patterns
