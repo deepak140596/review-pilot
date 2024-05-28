@@ -54,7 +54,6 @@ const Login = () => {
   return (
     <Layout className="layout">
       <Content className="login-container">
-      {emailLogin()}
         <Card className="login-card">
           <p className="login-intro">
             You will be authenticated through GitHub.
