@@ -159,7 +159,7 @@ function convertTimestamps(obj: any): any {
     }
   
     // Write a new document to a collection and return the document as the specified type
-    static async addDocument<T extends { [x: string]: any; }>(collectionPath: string, data: T): Promise<T> {
+    static async addDocument<T extends { [x: string]: any; }>(collectionPath: string, data: T): Promise<T & { id: string }> {
       try {
         const docRef = await addDoc(collection(firestoreDB, collectionPath), data);
         return { id: docRef.id, ...data };

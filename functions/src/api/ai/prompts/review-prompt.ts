@@ -1,4 +1,4 @@
-import { LLMConfig } from "../../../models/llm_config";
+import { LLMConfig } from "../../../models/llm-config";
 import { callClaude } from "../llm/callClaude";
 import { callGemini } from "../llm/callGemini";
 import { callGPT } from "../llm/callGpt";

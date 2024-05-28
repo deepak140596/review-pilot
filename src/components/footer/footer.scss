@@ -1,0 +1,22 @@
+.app-footer {
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #282c34;
+    .heading {
+        color: white;
+    }
+    .items {
+      color: white;
+      cursor: pointer;
+      padding-bottom: 8px;
+      &:hover {
+        color: #61dafb;
+      }
+    }
+    .copy-right {
+        color: white;
+        padding-top: 2rem;
+        padding-bottom: 8px;
+    }
+  }

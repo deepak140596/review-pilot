@@ -8,4 +8,8 @@ export interface Account {
     full_name?: string;
     repository_settings?: RepositorySettings;
     login?: string;
+    email?: string;
+    pro?: boolean;
+    contact?: string;
+    payment_in_progress?: boolean;
 }

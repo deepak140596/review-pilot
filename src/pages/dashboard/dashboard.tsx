@@ -8,7 +8,6 @@ import {
   DollarOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
-import AppLogo from '../../components/logo/logo';
 import { useAuth } from '../../context/auth-context';
 import { useEffect } from 'react';
 import Repositories from './repositories/repositories';
@@ -19,14 +18,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { setActiveAccount, subscribeToUserAccount, subscribeToUserOrganisations } from '../../store/account-slice';
 import { Account } from '../../api/models/account';
+import { getStripeConfig } from '../../store/stripe-slice';
+import { Subscription } from './subscription/subscription';
 
-const { Header, Sider } = Layout;
+const { Sider } = Layout;
 var isUserAccountSet = false;
 
 const Dashboard = () => {
   const { logout } = useAuth();
   const { data: userOrganisations } = useSelector((state: RootState) => state.userOrganisations);
   const { data: userAccount } = useSelector((state: RootState) => state.userAccount);
+
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -38,6 +40,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(subscribeToUserAccount())
+    dispatch(getStripeConfig())
   }, [dispatch])
 
   const setUserAccount = (userAccount: Account) => {
@@ -82,12 +85,6 @@ const Dashboard = () => {
 
   return (
     <Layout className="dashboard-layout">
-
-      <Header className="dashboard-header">
-        <AppLogo/>
-      </Header>
-
-      <Layout>
         <Sider width={250} className='dashboard-sidebar'>
           <Menu
               mode='inline'
@@ -112,11 +109,10 @@ const Dashboard = () => {
               </Menu.Item>
               <Menu.Item key="6" 
                 icon={<DollarOutlined />}>
-                Subscription
+                <Link to="/dashboard/subscription">Subscription</Link>
               </Menu.Item>
           </Menu>
 
-          {/* separator line */}
           <div className='dashboard-sidebar-separator'></div>
 
           {organisationsMenu()}
@@ -134,10 +130,10 @@ const Dashboard = () => {
             <Route path="/repositories" element={<Repositories />} />
             <Route path="/configure-project/:projectId" element={<ConfigureProject />} />
             <Route path="/organisation" element={<ConfigureOrganisation />} />
+            <Route path="/subscription" element={<Subscription/>} />
           </Routes>
         </Layout>
       </Layout>
-    </Layout>
   );
 };
 
