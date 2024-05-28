@@ -3,6 +3,7 @@ import { ActiveSubscription } from "../api/models/active_subscription";
 import { DataState } from "./store";
 import { FirestoreService } from "../api/services/firestore/firestore-service";
 import { limit, where } from "firebase/firestore";
+import { uid } from "../context/auth-context";
 
 const initialStateForActiveSubscription: DataState<ActiveSubscription> = {
     loading: false,
@@ -12,9 +13,9 @@ const initialStateForActiveSubscription: DataState<ActiveSubscription> = {
 
 export const getActiveSubscription = createAsyncThunk(
     "activeSubscription/getActiveSubscription",
-    async (userId: string, { dispatch }) => {
+    async (_, { dispatch }) => {
         FirestoreService.listenToQueryCollection<ActiveSubscription>(
-            `users/${userId}/subscriptions`, 
+            `users/${uid()}/subscriptions`, 
             (activeSubscription) => {
                 if (activeSubscription.length > 0) {
                     dispatch(setActiveSubscription(activeSubscription[0]));

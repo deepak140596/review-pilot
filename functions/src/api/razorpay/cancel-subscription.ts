@@ -13,25 +13,28 @@ try {
 const db = admin.firestore();
 
 app.post('/', async (req, res) => {
-    const { userId, cancelAtEnd } = req.body;
+    const { userId } = req.body;
     const razorpayData = (await db.doc('admin/razorpay_test').get()).data();
     const razorpay = new Razorpay({
         key_id: razorpayData?.key_id,
         key_secret: razorpayData?.key_secret
     });
 
-    const activeSubscriptions = await db.collection(`users/${userId}/subscriptions/`)
-        .where('active', '==', true).limit(1).get();
-    if (activeSubscriptions.empty) {
+    console.log(`User ID: ${userId}}`)
+    const activeSubscriptions = (await db.collection(`users/${userId}/subscriptions`)
+        .where('active', '==', true).limit(1).get()).docs;
+    
+    if (activeSubscriptions.length === 0) {
+        console.log('Subscription not found');
         res.status(400).send({ message: 'Subscription not found' });
         return;
     }
-    const activeSubscription = activeSubscriptions.docs[0].data();
+    const activeSubscription = activeSubscriptions[0].data();
     const subscriptionId = activeSubscription.subscription.id;
-    const options = {
-        cancel_at_cycle_end: cancelAtEnd ? 1 : 0
-    }
-    const cancelSubs = await razorpay.subscriptions.cancel(subscriptionId, options);
+    // const options = {
+    //     cancel_at_cycle_end: cancelAtEnd
+    // }
+    const cancelSubs = await razorpay.subscriptions.cancel(subscriptionId);
     res.send({ cancelSubs });
 });
 

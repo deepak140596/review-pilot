@@ -6,7 +6,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Plan } from '../../../../api/models/plan';
 import { uid } from '../../../../context/auth-context';
 import { getPlans } from '../../../../store/plan-slice';
-import { createRazorpaySubscription } from '../../../../api/services/http/create-razorpay-subscription';
+import { createRazorpaySubscription } from '../../../../api/services/http/razorpay';
 import { getRazorpayCredentials } from '../../../../store/razorpay-slice';
 import { setPaymentInProgressInDB } from '../../../../api/services/firestore/firestore-setter';
 
