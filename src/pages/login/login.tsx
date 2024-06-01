@@ -69,6 +69,9 @@ const Login = () => {
   const login = () => {
     return (
       <div className="right-column">
+            <h1 className="title">
+              Signup now for a Free Trial 
+            </h1>
           <Card className="login-card">
             <h3 className="title">
               You will be authenticated through GitHub.
