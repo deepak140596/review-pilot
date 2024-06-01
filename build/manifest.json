@@ -3,12 +3,12 @@
   "name": "ReviewPilot",
   "icons": [
     {
-      "src": "logo192.jpeg",
+      "src": "logo192.png",
       "type": "image/jpeg",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.jpeg",
+      "src": "logo512.png",
       "type": "image/jpeg",
       "sizes": "512x512"
     }

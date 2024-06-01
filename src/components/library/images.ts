@@ -1,5 +1,5 @@
 const imagePaths = {
-    LOGO: '/images/review-pilot-logo.jpeg'
+    LOGO: '/images/review-pilot.png'
   };
   
   export default imagePaths;
