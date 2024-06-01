@@ -1,0 +1,11 @@
+.logo {
+    justify-content: center;
+    align-items: center;
+    height: 64px; // Adjust if necessary
+
+    img {
+      width: auto; // or your desired width
+      height: 100%; // maintain aspect ratio
+    }
+    padding: auto;
+  }

@@ -1,0 +1,36 @@
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+}
+
+.dashboard-content {
+  padding: 0 24px 24px;
+}
+
+.dashboard-sidebar {
+  // display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #fff;
+  height: 100vh;
+
+  .dashboard-sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
+  }
+
+  .dashboard-sidebar-footer {
+    padding-top: 24px;
+    text-align: center;
+    border-top: 1px solid #f0f0f0;
+  }
+}
+
+.dashboard-sidebar-separator {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 0 24px;
+}
