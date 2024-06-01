@@ -18,7 +18,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { setActiveAccount, subscribeToUserAccount, subscribeToUserOrganisations } from '../../store/account-slice';
 import { Account } from '../../api/models/account';
-import { getStripeConfig } from '../../store/stripe-slice';
 import { Subscription } from './subscription/subscription';
 
 const { Sider } = Layout;
@@ -40,7 +39,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(subscribeToUserAccount())
-    dispatch(getStripeConfig())
   }, [dispatch])
 
   const setUserAccount = (userAccount: Account) => {

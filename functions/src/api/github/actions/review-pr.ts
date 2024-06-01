@@ -10,7 +10,6 @@ try {
 } catch{}
 const db = admin.firestore();
 
-// TODO: check pro status and review
 export async function reviewPR(req: express.Request, octokit: Octokit, token: string) {
     const prNumber = req.body.pull_request.number as number;
     const repoName = req.body.repository.name as string;
@@ -22,7 +21,7 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
     const repositorySettings = await getRepositorySettings(req.body)
     // const generateHighLevelSummary = repositorySettings?.high_level_summary;
 
-    const isPro = await isOwnerPro(req.body);
+    const isPro = await isOwnerProOrTrial(req.body);
 
     if (!isPro) {
         console.log('User is not pro');
@@ -98,7 +97,7 @@ async function matchPRConditions(payload: any, repoSettings: RepositorySettings)
     return false;
 }
 
-async function isOwnerPro(payload: any) : Promise<boolean> {
+async function isOwnerProOrTrial(payload: any) : Promise<boolean> {
     const ownerType = payload.repository.owner.type;
     var isPro = false;
     if (ownerType === 'Organization') {
@@ -108,6 +107,10 @@ async function isOwnerPro(payload: any) : Promise<boolean> {
             return false
         }
         isPro = orgAccount['pro'] as boolean;
+
+        if (!isPro) {
+            isPro = isTrial(orgAccount);
+        }
     } else {
         const ownerId = payload.repository.owner.id;
         try {
@@ -116,6 +119,9 @@ async function isOwnerPro(payload: any) : Promise<boolean> {
                 return false
             }
             isPro = userAccount.data()['pro'] as boolean;
+            if (!isPro) {
+                isPro = isTrial(userAccount);
+            }
         } catch (error) {
             return false
         }
@@ -366,4 +372,15 @@ function splitIntoGroups(fileSections: string[][], numberOfGroups : number): str
 
 function labelsToCommaSeparatedString(labels: { name: string }[]): string {
     return labels.map(label => label.name).join(', ');
+}
+
+function isTrial(account: any): boolean {
+    if (!account.created_at) {
+        return false;
+    }
+    const trialDays = 30;
+    const now = new Date();
+    const diff = now.getTime() - account.created_at.getTime();
+    const diffDays = diff / (1000 * 3600 * 24);
+    return diffDays < trialDays;
 }

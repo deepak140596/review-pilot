@@ -9,6 +9,7 @@ import { getPlans } from '../../../../store/plan-slice';
 import { createRazorpaySubscription } from '../../../../api/services/http/razorpay';
 import { getRazorpayCredentials } from '../../../../store/razorpay-slice';
 import { setPaymentInProgressInDB } from '../../../../api/services/firestore/firestore-setter';
+import { Trial } from '../trial/trail';
 
 
 export const BuySubscription = () => {
@@ -122,6 +123,9 @@ export const BuySubscription = () => {
     const plansView = () => {
         return (
             <Col span={24}>
+                <Row> 
+                    <Trial />
+                </Row>
                 <Row gutter={16} align="middle">
                     <Col span={12}>
                         {plans && plan(plans.monthly)}
