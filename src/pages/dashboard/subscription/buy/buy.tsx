@@ -9,7 +9,7 @@ import { getPlans } from '../../../../store/plan-slice';
 import { createRazorpaySubscription } from '../../../../api/services/http/razorpay';
 import { getRazorpayCredentials } from '../../../../store/razorpay-slice';
 import { setPaymentInProgressInDB } from '../../../../api/services/firestore/firestore-setter';
-import { Trial } from '../trial/trail';
+import { Trial } from '../trial/trial';
 
 
 export const BuySubscription = () => {

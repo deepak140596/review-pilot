@@ -51,22 +51,43 @@ const Login = () => {
     )
   }
 
+  const leftContent = () => {
+    return (
+      <div className="left-column">
+        <img src="your-image-url.jpg" alt="Description" className="left-image" />
+        <p className="left-text">
+          Here is some text accompanying the image. Add more descriptive content here.
+        </p>
+      </div>
+    )
+  }
+
+  const login = () => {
+    return (
+      <div className="right-column">
+          <Card className="login-card">
+            <p className="login-intro">
+              You will be authenticated through GitHub.
+            </p>
+            <Button
+              type="primary"
+              icon={<GithubOutlined />}
+              onClick={handleLogin}
+              className="login-button"
+            >
+              Login with GitHub
+            </Button>
+          </Card>
+        </div>
+    )
+  }
+
   return (
     <Layout className="layout">
-      <Content className="login-container">
-        <Card className="login-card">
-          <p className="login-intro">
-            You will be authenticated through GitHub.
-          </p>
-          <Button
-            type="primary"
-            icon={<GithubOutlined />}
-            onClick={handleLogin}
-            className="login-button"
-          >
-            Login with GitHub
-          </Button>
-        </Card>
+      <Content className="content-container">
+        { leftContent() }
+        <div className="divider"></div>
+        { login() }
       </Content>
     </Layout>
   );
