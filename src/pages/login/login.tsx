@@ -5,6 +5,7 @@ import { Content } from 'antd/es/layout/layout';
 import {useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth-context';
 import { useEffect, useState } from 'react';
+import imagePaths from '../../components/library/images';
 
 const Login = () => {
 
@@ -54,10 +55,13 @@ const Login = () => {
   const leftContent = () => {
     return (
       <div className="left-column">
-        <img src="your-image-url.jpg" alt="Description" className="left-image" />
-        <p className="left-text">
-          Here is some text accompanying the image. Add more descriptive content here.
-        </p>
+        <img src={imagePaths.CODE_REVIEW_LIGHT} alt="Description" className="left-image" />
+        <h1 className="title">
+          Automate your code reviews with ReviewPilot
+        </h1>
+        <h2 className='subtext'>
+          Best Open-Source Code Review Automation Tool
+        </h2>
       </div>
     )
   }
@@ -66,9 +70,9 @@ const Login = () => {
     return (
       <div className="right-column">
           <Card className="login-card">
-            <p className="login-intro">
+            <h3 className="title">
               You will be authenticated through GitHub.
-            </p>
+            </h3>
             <Button
               type="primary"
               icon={<GithubOutlined />}

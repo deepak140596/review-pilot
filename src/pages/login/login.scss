@@ -2,7 +2,16 @@
   display: flex;
 }
 
-.left-column, .right-column {
+.left-column {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: left;
+  padding: 20px;
+}
+
+.right-column {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -32,4 +41,17 @@
 
 .right-column {
   background-color: #ffffff; /* White background for the right column */
+}
+
+.title {
+  margin-top: 20px;
+  margin-left: 10px;
+  text-align: start;
+  color: #333333; /* Color for the title */
+}
+
+.subtext {
+  text-align: start;
+  margin-left: 10px;
+  color: #8c8c8c; /* Color for the subtext */
 }

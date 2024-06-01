@@ -1,20 +1,9 @@
+import { firebaseConfig } from './firebase-config';
 import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot, DocumentData, Timestamp, onSnapshot, FirestoreError, query, Query, QueryConstraint } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from 'firebase/auth';
-
-
-const firebaseConfig = {
-    apiKey: "AIzaSyA-xIPfXGXpodGyGcFHh4VbHnantzh9AhY",
-    authDomain: "pr-review-bot.firebaseapp.com",
-    databaseURL: "https://pr-review-bot.firebaseio.com",
-    projectId: "pr-review-bot",
-    storageBucket: "pr-review-bot.appspot.com",
-    messagingSenderId: "735766966982",
-    appId: "1:735766966982:web:8ee3f68e26652516a41dc7",
-    measurementId: "G-GV0GQKV03S"
-  };
 
 const firebaseApp = initializeApp(firebaseConfig);
 const analytics = getAnalytics(firebaseApp);

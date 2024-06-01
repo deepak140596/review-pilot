@@ -5,6 +5,12 @@ import AppLogo from '../logo/logo';
 import { Link } from 'react-router-dom';
 
 export const Footer = () => {
+
+    const handleGithubRepoClick = () => {
+        const repoLink = 'https://github.com/deepak140596/review-pilot';
+        window.open(repoLink, '_blank');
+    }
+
     return (
     <AntFooter className='app-footer'>
         <Row>
@@ -53,6 +59,12 @@ export const Footer = () => {
                        Docs
                     </div>
                 </Link>
+
+                <div className='items' onClick={handleGithubRepoClick}>
+                    GitHub
+                </div>
+                
+               
             </Col>
   
             <Col span={12}>

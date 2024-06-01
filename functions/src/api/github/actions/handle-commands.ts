@@ -12,7 +12,7 @@ export async function handleCommands(req: express.Request, octokit: Octokit, tok
             pull_number: req.body.issue.number
         });
         req.body.pull_request = pullRequest.data;
-        const reviewResults = await reviewPR(req, octokit, token);
+        const reviewResults = await reviewPR(req, octokit, token, true);
         return reviewResults;
     } else {
         return { message: 'No action taken' };

@@ -10,7 +10,7 @@ try {
 } catch{}
 const db = admin.firestore();
 
-export async function reviewPR(req: express.Request, octokit: Octokit, token: string) {
+export async function reviewPR(req: express.Request, octokit: Octokit, token: string, isIncrementalReview: boolean = false) {
     const prNumber = req.body.pull_request.number as number;
     const repoName = req.body.repository.name as string;
     const owner = req.body.repository.owner.login as string;
@@ -28,7 +28,7 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
         return {message: "User is not pro"}
     } else {
         if (repositorySettings) {
-            const shouldReviewPR = await matchPRConditions(req.body, repositorySettings)
+            const shouldReviewPR = await matchPRConditions(req.body, repositorySettings, isIncrementalReview)
             console.log(`Should Review PR: ${shouldReviewPR}`)
             if (shouldReviewPR) {
                 await deletePendingReview(owner, repoName, prNumber, octokit);
@@ -52,21 +52,28 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
     }
 }
 
-async function matchPRConditions(payload: any, repoSettings: RepositorySettings): Promise<boolean> {
+async function matchPRConditions(
+    payload: any, 
+    repoSettings: RepositorySettings, 
+    isIncrementalReview: boolean
+): Promise<boolean> {
 
     if (repoSettings === null) {
+        console.log('Repo settings not found');
         return true
     }
     
-    if (!repoSettings.automated_reviews) {
+    if (!repoSettings.automated_reviews && !isIncrementalReview) {
         const action = payload.action;
         if (action !== 'opened') {
+            console.log('Not automated reviews');
             return false
         }
     }
 
     const isDraftRepo = payload.pull_request.draft as boolean;
     if (!repoSettings.draft_pull_request_reviews && isDraftRepo) {
+        console.log('Not draft reviews');
         return false
     }
 
@@ -75,6 +82,7 @@ async function matchPRConditions(payload: any, repoSettings: RepositorySettings)
     const ignoreKeywords = repoSettings.ignore_title_keywords.split(',').map(keyword => keyword.trim().toLowerCase());
     for (const keyword of ignoreKeywords) {
         if (keyword && titleAndLabels.toLowerCase().includes(keyword)) {
+            console.log(`Ignoring keyword: ${keyword}`);
             return false;
         }
     }
@@ -90,10 +98,12 @@ async function matchPRConditions(payload: any, repoSettings: RepositorySettings)
     for (const targetBranch of targetBranches) {
         const regex = new RegExp(`^${targetBranch.replace('*', '.*')}$`);
         if (regex.test(branchName)) {
+            console.log(`Target branch: ${targetBranch} matched`);
             return true;
         }
     }
 
+    console.log(`Target branch not matched: ${branchName}`);
     return false;
 }
 
@@ -382,5 +392,6 @@ function isTrial(account: any): boolean {
     const now = new Date();
     const diff = now.getTime() - account.created_at.getTime();
     const diffDays = diff / (1000 * 3600 * 24);
+    console.log(`Diff days: ${diffDays}`);
     return diffDays < trialDays;
 }

@@ -66,3 +66,5 @@ node_modules/
 .env
 
 .package-lock.json
+
+src/api/services/firestore/firebase-config.ts
