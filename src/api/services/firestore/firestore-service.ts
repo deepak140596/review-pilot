@@ -1,4 +1,4 @@
-import { firebaseConfig } from './firebase-config';
+import { firebaseConfig } from '../../../app-config';
 import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot, DocumentData, Timestamp, onSnapshot, FirestoreError, query, Query, QueryConstraint } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
