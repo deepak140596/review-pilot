@@ -25,7 +25,8 @@
     "firebase-functions": "^4.3.1",
     "octokit": "^3.2.0",
     "openai": "^4.28.4",
-    "razorpay": "^2.9.4"
+    "razorpay": "^2.9.4",
+    "string-similarity": "^4.0.4"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.1.0",

@@ -9,17 +9,18 @@ try {
 } catch{}
 const db = admin.firestore();
 
-export async function getPRReviewFromLLM(input: string) {
+export async function getHighLevelSummaryFromLLM(input: string) {
     const llmConfig = (await db.doc('admin/llm_config').get()).data() as LLMConfig;
     const selectedLLM = llmConfig.activeModel;
     const llmPrompt = (await db.doc(`admin/llm_config/prompts/${selectedLLM}`).get()).data() as LLMPrompts;
-    const llmResponse = await prReviewLLMResponse(llmConfig, llmPrompt.prReview, input)
+    const llmResponse = await summaryLLMResponse(llmConfig, llmPrompt.highLevelSummary, input)
     const formattedResposne = llmResponse.replace(`\`\`\`json`, '').replace(`\`\`\``, '')
     const convertedJSON = JSON.parse(formattedResposne);
+    console.log(`highLevelSummary individual response: ${JSON.stringify(convertedJSON)}`)
     return convertedJSON
 }
 
-async function prReviewLLMResponse(llmConfig: LLMConfig, prompt: string, inputDiff: string) {
+async function summaryLLMResponse(llmConfig: LLMConfig, prompt: string, inputDiff: string) {
 
     const promptWithDiff = `${prompt} ${inputDiff}`
     switch (llmConfig.activeModel) {
