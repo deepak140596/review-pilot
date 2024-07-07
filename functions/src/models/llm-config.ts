@@ -2,7 +2,6 @@
 export interface LLMConfig {
     versions: LLMVersions,
     activeModel: string,
-    prompts: LLMPrompts,
     apiKeys: LLMAPIKeys,
 }
 
@@ -12,10 +11,9 @@ interface LLMVersions {
     gemini: string;
 }
 
-interface LLMPrompts {
-    claude: string;
-    gpt4: string;
-    gemini: string;
+export interface LLMPrompts {
+    prReview: string;
+    highLevelSummary: string;
 }
 
 interface LLMAPIKeys {

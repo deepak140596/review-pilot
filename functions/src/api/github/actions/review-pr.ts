@@ -19,7 +19,16 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
     console.log(`owner: ${owner} repo: ${repoName} prNumber: ${prNumber}`);
 
     const repositorySettings = await getRepositorySettings(req.body)
-    // const generateHighLevelSummary = repositorySettings?.high_level_summary;
+    
+    try {
+        const shouldGenerateHighLevelSummary = repositorySettings?.high_level_summary;
+        if (shouldGenerateHighLevelSummary) {
+            const diff = await getDiff(pullUrl, token);
+            await generateHighLevelSummary(diff);
+        }
+    } catch (error) {
+        console.log(`Error generating high level summary: ${error}`);
+    }
 
     const isPro = await isOwnerProOrTrial(req.body);
 
@@ -250,8 +259,8 @@ function filterDiff(diffContent: string) {
         /^diff --git a\/.*\.js b\/.*\.js$/,   // JavaScript files
         /^diff --git a\/.*\.jsx b\/.*\.jsx$/, // JSX files
         /^diff --git a\/.*\.html b\/.*\.html$/, // HTML files
-        // /^diff --git a\/.*\.scss b\/.*\.scss$/, // SCSS files
-        // /^diff --git a\/.*\.css b\/.*\.css$/  // CSS files
+        /^diff --git a\/.*\.scss b\/.*\.scss$/, // SCSS files
+        /^diff --git a\/.*\.css b\/.*\.css$/,  // CSS files
 
         // Android files
         /^diff --git a\/.*\.java b\/.*\.java$/, // Java files
@@ -394,4 +403,25 @@ function isTrial(account: any): boolean {
     const diffDays = diff / (1000 * 3600 * 24);
     console.log(`Diff days: ${diffDays}`);
     return diffDays < trialDays;
+}
+
+async function generateHighLevelSummary(diff: string) {
+    const filteredDiff = filterDiff(diff);
+    const fileSections = splitDiff(filteredDiff);
+    const groups = splitIntoGroups(fileSections, 20); // Splits into 20 groups
+
+    console.log(`Groups length for high level summary: ${groups.length}`);
+    const promises = groups.map(async group => {
+        return getLLMResponse(group);
+    });
+    const responses = await Promise.all(promises);
+    var comments : any[] =  [];
+
+    responses.forEach(response => {
+        const commentsFromResponse : any[] = response.comments;
+        console.log(`Comments: ${JSON.stringify(commentsFromResponse)}`);
+        comments.push(...commentsFromResponse);
+    });
+
+    return comments;
 }
