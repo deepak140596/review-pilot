@@ -158,3 +158,40 @@ export function splitIntoGroups(fileSections: string[][], numberOfGroups : numbe
 export function labelsToCommaSeparatedString(labels: { name: string }[]): string {
     return labels.map(label => label.name).join(', ');
 }
+
+export function addPositionToDiffHunks(diffContent: string): string {
+    // Split the diff content into lines
+    const lines = diffContent.split('\n');
+    let modifiedLines: string[] = [];
+    let inHunk = false;
+    let lineCount = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.startsWith('@@')) {
+            // Reset line count at the start of a new hunk
+            lineCount = 0;
+            inHunk = true;
+            modifiedLines.push(line + ' // Position: 0');
+        } else if (inHunk) {
+            if (line.startsWith('-') || line.startsWith(' ')) {
+                // Count context and removal lines
+                lineCount++;
+                modifiedLines.push(line + ` // Position: ${lineCount}`);
+                
+            } else if (line.startsWith('+')) {
+                // Count addition lines
+                lineCount++;
+                modifiedLines.push(line + ` // Position: ${lineCount}`);
+            } else {
+                // No longer in hunk
+                inHunk = false;
+            }
+        } else {
+            modifiedLines.push(line);
+        }
+    }
+
+    // Join the modified lines back into a single string
+    return modifiedLines.join('\n');
+}

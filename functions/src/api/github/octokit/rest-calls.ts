@@ -76,16 +76,21 @@ export async function saveReview(octokit: Octokit, owner: string,
     
     // TODO: make a final LLM call to remove duplicate comments
 
-    const review = await octokit.rest.pulls.createReview({
-        owner: owner,
-        repo: repoName,
-        pull_number: prNumber,
-        body: 'Here are some suggestions for your PR:\n\n',
-        event: 'COMMENT',
-        comments: validComments
-    });
+    try {
+        const review = await octokit.rest.pulls.createReview({
+            owner: owner,
+            repo: repoName,
+            pull_number: prNumber,
+            body: 'Here are some suggestions for your PR:\n\n',
+            event: 'COMMENT',
+            comments: validComments
+        });
 
-    return review;
+        return review;
+    } catch (error) {
+        console.error("Error saving review:", JSON.stringify(error));
+        return {message: "Error saving review"};
+    }
 }
 
 async function getExistingComments(octokit: Octokit, owner: string, repo: string, prNumber: number) {
@@ -110,9 +115,13 @@ export async function validateCommentPositions(octokit: Octokit, owner: string, 
     const files = response.data;
 
     for (const comment of comments) {
-        const diffHunk = getDiffHunk(files, comment.path, comment.position);
-        if (diffHunk) {
-            validComments.push(comment);
+        try {
+            const diffHunk = getDiffHunk(files, comment.path, comment.position);
+            if (diffHunk) {
+                validComments.push(comment);
+            }
+        } catch (error) {
+            console.error(`Error validating comment position: ${error}`);
         }
     }
 

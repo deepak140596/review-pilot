@@ -2,8 +2,8 @@ import * as functions from 'firebase-functions';
 import * as express from 'express';
 import { reviewPR } from './actions/review-pr';
 import { handleCommands } from './actions/handle-commands';
-import { getAuthenticatedOctokit } from './octokit/authentication';
 import { processInstallationCreatedEvent, processInstallationDeletedEvent, processRepositoriesAddedEvent, processRepositoriesRemovedEvent } from './actions/repo-updates';
+import { getAuthenticatedOctokit } from './octokit/authentication';
 
 const app = express();
 

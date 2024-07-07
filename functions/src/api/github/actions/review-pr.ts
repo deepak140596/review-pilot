@@ -6,7 +6,7 @@ import { getHighLevelSummaryFromLLM } from "../../ai/prompts/high-level-summary"
 import { HighLevelSummary } from "../../../models/high-level-summary";
 import { deletePendingReview, getDiff, saveReview, updatePRDescription } from "../octokit/rest-calls";
 import { getPRReviewFromLLM } from "../../ai/prompts/review-prompt";
-import { filterDiff, labelsToCommaSeparatedString, splitDiff, splitIntoGroups } from "../utils/diff";
+import { addPositionToDiffHunks, filterDiff, labelsToCommaSeparatedString, splitDiff, splitIntoGroups } from "../utils/diff";
 
 try {
     admin.initializeApp();
@@ -49,13 +49,8 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
                 const comments = await getCommmentsFromLLm(diffText);
                 console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
             
-                try { 
-                    const review = await saveReview(octokit, owner, repoName, prNumber, comments);
-                    return review;
-                } catch (error) {
-                    console.error("Error saving comments:", JSON.stringify(error));
-                    return {message: "Error saving comments"}
-                }
+                const review = await saveReview(octokit, owner, repoName, prNumber, comments);
+                return review;
             }
         }
 
@@ -192,7 +187,8 @@ async function getRepositorySettings(payload: any): Promise<RepositorySettings |
 
 async function getCommmentsFromLLm(diff: string) {
     const filteredDiff = filterDiff(diff);
-    const fileSections = splitDiff(filteredDiff);
+    const positionNumberedDiff = addPositionToDiffHunks(filteredDiff);
+    const fileSections = splitDiff(positionNumberedDiff);
     const groups = splitIntoGroups(fileSections, 10); // Splits into 10 groups
 
     console.log(`Groups length: ${groups.length}`);
