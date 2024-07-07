@@ -4,6 +4,8 @@ import { getLLMResponse } from "../../ai/prompts/review-prompt";
 import axios from "axios";
 import * as admin from "firebase-admin";
 import { RepositorySettings } from "../../../models/repository-settings";
+import { getHighLevelSummaryFromLLM } from "../../ai/prompts/high-level-summary";
+import { HighLevelSummary } from "../../../models/high-level-summary";
 
 try {
     admin.initializeApp();
@@ -24,7 +26,8 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
         const shouldGenerateHighLevelSummary = repositorySettings?.high_level_summary;
         if (shouldGenerateHighLevelSummary) {
             const diff = await getDiff(pullUrl, token);
-            await generateHighLevelSummary(diff);
+            const summary = await generateHighLevelSummary(diff);
+            await updatePRDescription(owner, repoName, prNumber, octokit, summary);
         }
     } catch (error) {
         console.log(`Error generating high level summary: ${error}`);
@@ -412,16 +415,104 @@ async function generateHighLevelSummary(diff: string) {
 
     console.log(`Groups length for high level summary: ${groups.length}`);
     const promises = groups.map(async group => {
-        return getLLMResponse(group);
+        return getHighLevelSummaryFromLLM(group);
     });
     const responses = await Promise.all(promises);
-    var comments : any[] =  [];
+    var highLevelSummary: HighLevelSummary = {};
 
-    responses.forEach(response => {
-        const commentsFromResponse : any[] = response.comments;
-        console.log(`Comments: ${JSON.stringify(commentsFromResponse)}`);
-        comments.push(...commentsFromResponse);
+    responses.forEach((response : HighLevelSummary) => {
+
+        if (response.styles) {
+            if (!highLevelSummary.styles) {
+                highLevelSummary.styles = [];
+            }
+            highLevelSummary.styles.push(...response.styles);
+        }
+
+        if (response.bugFixes) {
+            if (!highLevelSummary.bugFixes) {
+                highLevelSummary.bugFixes = [];
+            }
+            highLevelSummary.bugFixes.push(...response.bugFixes);
+        }
+
+        if (response.chores) {
+            if (!highLevelSummary.chores) {
+                highLevelSummary.chores = [];
+            }
+            highLevelSummary.chores.push(...response.chores);
+        }
+
+        if (response.refactors) {
+            if (!highLevelSummary.refactors) {
+                highLevelSummary.refactors = [];
+            }
+            highLevelSummary.refactors.push(...response.refactors);
+        }
+
+        if (response.newFeatures) {
+            if (!highLevelSummary.newFeatures) {
+                highLevelSummary.newFeatures = [];
+            }
+            highLevelSummary.newFeatures.push(...response.newFeatures);
+        }
     });
 
-    return comments;
+    console.log(`High level summary: ${JSON.stringify(highLevelSummary)}`);
+
+    return highLevelSummary;
+}
+
+async function updatePRDescription(
+    owner: string, repo: string, 
+    pull_number: number, octokit: Octokit,
+    summary: HighLevelSummary
+) {
+    const newBody =`
+<!-- This is an auto-generated comment: release notes by ReviewPilot -->
+## Summary by ReviewPilot
+
+${generateTextSummary(summary)}
+
+<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+    `
+    try {
+        const response = await octokit.rest.pulls.update({
+            owner,
+            repo,
+            pull_number,
+            body: newBody
+        });
+        console.log("Pull request updated successfully:", response.data);
+    } catch (error) {
+        console.error("Error updating pull request:", error);
+    }
+}
+
+function generateTextSummary(summary: HighLevelSummary) {
+    let text = '';
+    if (summary.styles) {
+        text += generateSection('Style', summary.styles);
+    }
+    if (summary.bugFixes) {
+        text += generateSection('Bug Fixes', summary.bugFixes);
+    }
+    if (summary.chores) {
+        text += generateSection('Chores', summary.chores);
+    }
+    if (summary.refactors) {
+        text += generateSection('Refactor', summary.refactors);
+    }
+    if (summary.newFeatures) {
+        text += generateSection('New Features', summary.newFeatures);
+    }
+    return text;
+}
+
+function generateSection(title: string, items: string[]) {
+    let text = `- **${title}**\n`;
+    items.forEach(item => {
+        text += `\t- ${item}\n`;
+    });
+    return text;
 }
