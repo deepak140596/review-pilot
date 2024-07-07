@@ -24,7 +24,7 @@ async function prReviewLLMResponse(llmConfig: LLMConfig, prompt: string, inputDi
     const promptWithDiff = `${prompt} ${inputDiff}`
     switch (llmConfig.activeModel) {
         case "gpt4":
-            return callGPT(llmConfig.apiKeys.gpt4, llmConfig.versions.gpt4, promptWithDiff);
+            return callGPT(llmConfig.apiKeys.gpt4, llmConfig.versions.gpt4o, promptWithDiff);
         case "claude":
             return callClaude(llmConfig.apiKeys.claude, llmConfig.versions.claude, promptWithDiff);
         case "gemini":

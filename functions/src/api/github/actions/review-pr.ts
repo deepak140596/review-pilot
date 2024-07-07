@@ -49,8 +49,13 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
                 const comments = await getCommmentsFromLLm(diffText);
                 console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
             
-                const review = saveComments(octokit, owner, repoName, prNumber, comments);
-                return review;
+                try { 
+                    const review = await saveComments(octokit, owner, repoName, prNumber, comments);
+                    return review;
+                } catch (error) {
+                    console.error("Error saving comments:", JSON.stringify(error));
+                    return {message: "Error saving comments"}
+                }
             }
         }
 
@@ -518,21 +523,31 @@ function generateSection(title: string, items: string[]) {
 
 async function filterDuplicateComments(existingComments: any[], newComments: any[]) {
 
-    const threshold = 0.8;
+    const threshold = 0.5;
     const filteredComments: any[] = [];
 
     newComments.forEach(newComment => {
         var isDuplicate = false;
+        console.log(`Calculating similarity for comment: ${newComment.body}`);
         existingComments.forEach(existingComment => {
-            if (existingComment.path === newComment.path) {
-                const similarity = stringSimilarity.compareTwoStrings(newComment.body, existingComment.body_text);
-                if (similarity >= threshold) {
-                    isDuplicate = true;
+            try {
+                if (existingComment.path === newComment.path) {
+                    const similarity = stringSimilarity.compareTwoStrings(newComment.body, existingComment.body);
+                    console.log(`Similarity: ${similarity}`)
+                    console.log(`Existing comment: ${existingComment.body}` )
+                    if (similarity >= threshold) {
+                        isDuplicate = true;
+                    }
                 }
+            } catch (error) {
+                console.error(`Error comparing comments: ${error}`);
             }
         });
         if (!isDuplicate) {
             filteredComments.push(newComment);
+            console.log(`Result : New comment`);
+        } else {
+            console.log(`Result : Duplicate comment`);
         }
     })
 
@@ -553,6 +568,7 @@ async function saveComments(octokit: Octokit, owner: string,
 ) {
     const existingComments = await getExistingComments(octokit, owner, repoName, prNumber);
     const filteredComments = await filterDuplicateComments(existingComments, comments);
+    const validComments = await validateCommentPositions(octokit, owner, repoName, prNumber, filteredComments);
     
     const review = await octokit.rest.pulls.createReview({
         owner: owner,
@@ -560,8 +576,44 @@ async function saveComments(octokit: Octokit, owner: string,
         pull_number: prNumber,
         body: 'Here are some suggestions for your PR:\n\n',
         event: 'COMMENT',
-        comments: filteredComments
+        comments: validComments
     });
 
     return review;
+}
+
+
+async function validateCommentPositions(octokit: Octokit, owner: string, repo: string, prNumber: number, comments: any[]): Promise<any[]> {
+    const validComments = [];
+
+    // Fetch the list of files changed in the pull request
+    const response = await octokit.rest.pulls.listFiles({
+        owner,
+        repo,
+        pull_number: prNumber
+    });
+
+    const files = response.data;
+
+    for (const comment of comments) {
+        const diffHunk = getDiffHunk(files, comment.path, comment.position);
+        if (diffHunk) {
+            validComments.push(comment);
+        }
+    }
+
+    return validComments;
+}
+
+function getDiffHunk(files: any[], filePath: string, position: number): string | null {
+    for (const file of files) {
+        if (file.filename === filePath) {
+            const lines = file.patch.split('\n');
+            if (position <= lines.length) {
+                return lines[position - 1];
+            }
+        }
+    }
+
+    return null;
 }
