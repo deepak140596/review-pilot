@@ -9,7 +9,7 @@ try {
 } catch{}
 const db = admin.firestore();
 
-export async function getLLMResponse(input: string) {
+export async function getPRReviewFromLLM(input: string) {
     const llmConfig = (await db.doc('admin/llm_config').get()).data() as LLMConfig;
     const selectedLLM = llmConfig.activeModel;
     const llmPrompt = (await db.doc(`admin/llm_config/prompts/${selectedLLM}`).get()).data() as LLMPrompts;
