@@ -6,6 +6,7 @@ import * as admin from "firebase-admin";
 import { RepositorySettings } from "../../../models/repository-settings";
 import { getHighLevelSummaryFromLLM } from "../../ai/prompts/high-level-summary";
 import { HighLevelSummary } from "../../../models/high-level-summary";
+const stringSimilarity = require('string-similarity');
 
 try {
     admin.initializeApp();
@@ -48,14 +49,7 @@ export async function reviewPR(req: express.Request, octokit: Octokit, token: st
                 const comments = await getCommmentsFromLLm(diffText);
                 console.log(`LLM Response comments: ${JSON.stringify(comments)}`);
             
-                const review = await octokit.rest.pulls.createReview({
-                    owner: owner,
-                    repo: repoName,
-                    pull_number: prNumber,
-                    body: 'Here are some suggestions for your PR:\n\n',
-                    event: 'COMMENT',
-                    comments: comments
-                });
+                const review = saveComments(octokit, owner, repoName, prNumber, comments);
                 return review;
             }
         }
@@ -520,4 +514,54 @@ function generateSection(title: string, items: string[]) {
         text += `\t- ${item}\n`;
     });
     return text;
+}
+
+async function filterDuplicateComments(existingComments: any[], newComments: any[]) {
+
+    const threshold = 0.8;
+    const filteredComments: any[] = [];
+
+    newComments.forEach(newComment => {
+        var isDuplicate = false;
+        existingComments.forEach(existingComment => {
+            if (existingComment.path === newComment.path) {
+                const similarity = stringSimilarity.compareTwoStrings(newComment.body, existingComment.body_text);
+                if (similarity >= threshold) {
+                    isDuplicate = true;
+                }
+            }
+        });
+        if (!isDuplicate) {
+            filteredComments.push(newComment);
+        }
+    })
+
+    return filteredComments;
+}
+
+async function getExistingComments(octokit: Octokit, owner: string, repo: string, prNumber: number) {
+    const { data: comments } = await octokit.rest.pulls.listReviewComments({
+        owner,
+        repo,
+        pull_number: prNumber
+    });
+    return comments;
+}
+
+async function saveComments(octokit: Octokit, owner: string, 
+    repoName: string, prNumber: number, comments: any[]
+) {
+    const existingComments = await getExistingComments(octokit, owner, repoName, prNumber);
+    const filteredComments = await filterDuplicateComments(existingComments, comments);
+    
+    const review = await octokit.rest.pulls.createReview({
+        owner: owner,
+        repo: repoName,
+        pull_number: prNumber,
+        body: 'Here are some suggestions for your PR:\n\n',
+        event: 'COMMENT',
+        comments: filteredComments
+    });
+
+    return review;
 }
