@@ -9,7 +9,8 @@ interface LLMVersions {
     claude: string;
     gpt4: string;
     gemini: string;
-    gpt3: string
+    gpt3: string;
+    gpt4o: string;
 }
 
 export interface LLMPrompts {

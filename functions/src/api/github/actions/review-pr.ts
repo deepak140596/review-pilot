@@ -483,7 +483,7 @@ ${generateTextSummary(summary)}
             pull_number,
             body: newBody
         });
-        console.log("Pull request updated successfully:", response.data);
+        console.log("Pull request updated successfully:");
     } catch (error) {
         console.error("Error updating pull request:", error);
     }
@@ -510,6 +510,11 @@ function generateTextSummary(summary: HighLevelSummary) {
 }
 
 function generateSection(title: string, items: string[]) {
+
+    if (items.length === 0) {
+        return '';
+    }
+
     let text = `- **${title}**\n`;
     items.forEach(item => {
         text += `\t- ${item}\n`;
